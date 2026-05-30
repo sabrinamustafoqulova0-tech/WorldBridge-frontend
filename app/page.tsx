@@ -12,52 +12,22 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import PublicIcon from '@mui/icons-material/Public';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ExploreIcon from '@mui/icons-material/Explore';
+import { useLangStore } from "../store/langStore";
+import { translations } from "../locales/translations";
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuthStore();
+  const { lang, setLang } = useLangStore();
 
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [lang, setLang] = useState<"ru" | "en">("ru");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const t = {
-    ru: {
-      title: "Твой мост в новую жизнь",
-      subtitle: "WorldBridge — это умная платформа для планирования переезда, учебы и работы за рубежом. Мы помогаем найти лучшие программы в Европе, Азии и Северной Америке.",
-      programs: "Популярные направления",
-      login: "Войти",
-      register: "Начать бесплатно",
-      home: "Каталог программ",
-      program1: "Образование за рубежом",
-      desc1: "Поступление в лучшие университеты мира. Гранты, стипендии и бесплатное обучение.",
-      program2: "Работа и стажировки",
-      desc2: "От Ausbildung до Blue Card. Актуальные вакансии и стажировки с релокацией.",
-      program3: "Языковые курсы и Au-Pair",
-      desc3: "Учите языки с полным погружением и путешествуйте по миру по обмену.",
-      detailedInfo: "Подробная (поглубже) информация о странах и программах"
-    },
-    en: {
-      title: "Your bridge to a new life",
-      subtitle: "WorldBridge is a smart platform for planning your relocation, studies, and work abroad. We help you find the best programs in Europe, Asia, and North America.",
-      programs: "Popular Destinations",
-      login: "Log In",
-      register: "Start for Free",
-      home: "Program Catalog",
-      program1: "Study Abroad",
-      desc1: "Admission to top global universities. Grants, scholarships, and free education.",
-      program2: "Work and Internships",
-      desc2: "From Ausbildung to Blue Card. Latest vacancies and internships with relocation.",
-      program3: "Language Courses & Au-Pair",
-      desc3: "Learn languages with full immersion and travel the world on exchange programs.",
-      detailedInfo: "Detailed (deeper) information about countries and programs"
-    }
-  };
-
-  const text = t[lang];
+  const text = translations[lang]?.landing || translations.ru.landing;
+  const navText = translations[lang]?.nav || translations.ru.nav;
 
   if (isLoading) {
     return (
@@ -80,8 +50,8 @@ export default function LandingPage() {
 
         <div className="flex items-center gap-6">
           <nav className="hidden md:flex gap-6 font-medium text-sm text-[#0F172A] dark:text-gray-300">
-            <Link href="/home" className="hover:text-[#3B82F6] transition-colors">{text.home}</Link>
-            <Link href="/countries" className="hover:text-[#3B82F6] transition-colors">Страны</Link>
+            <Link href="/home" className="hover:text-[#3B82F6] transition-colors">{navText.home}</Link>
+            <Link href="/countries" className="hover:text-[#3B82F6] transition-colors">{navText.destinations}</Link>
           </nav>
 
           <select
@@ -89,8 +59,9 @@ export default function LandingPage() {
             value={lang}
             onChange={(e) => setLang(e.target.value as any)}
           >
-            <option value="ru" className="text-black">RU</option>
-            <option value="en" className="text-black">EN</option>
+            <option value="ru" className="text-black">Русский</option>
+            <option value="en" className="text-black">English</option>
+            <option value="tg" className="text-black">Тоҷикӣ</option>
           </select>
 
           {mounted && (
@@ -117,13 +88,13 @@ export default function LandingPage() {
                   href="/login"
                   className="px-5 py-2 rounded-lg font-medium text-[#0F172A] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                 >
-                  {text.login}
+                  {navText.login}
                 </Link>
                 <Link
                   href="/register"
                   className="px-5 py-2 rounded-lg font-medium bg-[#3B82F6] text-white hover:bg-blue-600 transition shadow-md shadow-blue-500/20"
                 >
-                  {text.register}
+                  {navText.signup}
                 </Link>
               </>
             )}

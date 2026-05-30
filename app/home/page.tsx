@@ -10,6 +10,8 @@ import PublicIcon from '@mui/icons-material/Public';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import { useLangStore } from "../../store/langStore";
+import { translations } from "../../locales/translations";
 
 const COUNTRIES = [
   { id: "de", name: "Germany", programs: 142, x: 52, y: 33 },
@@ -37,10 +39,14 @@ const CONNECTIONS = [
 
 export default function HomePage() {
   const { user, isAuthenticated, isLoading, logout } = useAuthStore();
+  const { lang, setLang } = useLangStore();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+
+  const text = translations[lang]?.home || translations.ru.home;
+  const navText = translations[lang]?.nav || translations.ru.nav;
 
   useEffect(() => {
     setMounted(true);
@@ -73,21 +79,22 @@ export default function HomePage() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-500 dark:text-gray-400">
-            <Link href="/programs" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">Programs</Link>
-            <Link href="/countries" className="text-[#0F172A] dark:text-white drop-shadow-[0_0_10px_rgba(15,23,42,0.1)] dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Destinations</Link>
-            <Link href="/articles" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">Insights</Link>
-            <Link href="/calculator" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">Estimator</Link>
+            <Link href="/programs" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">{navText.programs}</Link>
+            <Link href="/countries" className="text-[#0F172A] dark:text-white drop-shadow-[0_0_10px_rgba(15,23,42,0.1)] dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{navText.destinations}</Link>
+            <Link href="/articles" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">{navText.insights}</Link>
+            <Link href="/calculator" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">{navText.estimator}</Link>
           </div>
 
           <div className="flex items-center space-x-4">
             {mounted && (
               <select 
                 className="bg-transparent text-sm font-medium text-gray-500 dark:text-gray-400 focus:outline-none cursor-pointer hover:text-[#0F172A] dark:hover:text-white transition-colors appearance-none"
+                value={lang}
+                onChange={(e) => setLang(e.target.value as any)}
               >
                 <option value="ru">Русский</option>
                 <option value="en">English</option>
-                <option value="tr">Türkçe</option>
-                <option value="de">Deutsch</option>
+                <option value="tg">Тоҷикӣ</option>
               </select>
             )}
 
@@ -105,22 +112,22 @@ export default function HomePage() {
               <div className="flex items-center gap-4">
                 <Link href="/profile" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[#0F172A] dark:hover:text-white transition-colors">
                   <AccountCircleIcon fontSize="small" />
-                  <span className="hidden sm:inline">{user?.full_name || 'Profile'}</span>
+                  <span className="hidden sm:inline">{user?.full_name || navText.profile}</span>
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="text-sm font-medium text-gray-500 hover:text-[#0F172A] dark:hover:text-white transition-colors"
                 >
-                  Logout
+                  {navText.logout}
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-4 text-sm font-medium">
                 <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-[#0F172A] dark:hover:text-white transition-colors">
-                  Log in
+                  {navText.login}
                 </Link>
                 <Link href="/register" className="bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] px-4 py-1.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-md dark:shadow-[0_0_20px_rgba(255,255,255,0.15)] dark:hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]">
-                  Sign up
+                  {navText.signup}
                 </Link>
               </div>
             )}
@@ -138,15 +145,15 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-6 text-center z-10 relative mb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-xs font-semibold uppercase tracking-widest mb-8 shadow-sm dark:shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-colors duration-300">
             <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse"></span>
-            Global Opportunities Network
+            {text.badge}
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-gray-900 to-gray-500 dark:from-white dark:to-white/60 mb-6 leading-tight transition-colors duration-300">
-            Connect to your future. <br className="hidden md:block"/> Anywhere in the world.
+            {text.title1} <br className="hidden md:block"/> {text.title2}
           </h1>
           
           <p className="text-lg text-gray-500 dark:text-gray-400 font-light max-w-2xl mx-auto leading-relaxed transition-colors duration-300">
-            Detailed, in-depth information about top programs worldwide. Explore relocation pathways, educational grants, and elite career opportunities across premium destinations.
+            {text.subtitle}
           </p>
         </div>
 
@@ -215,7 +222,7 @@ export default function HomePage() {
                   </span>
                   
                   <div className={`mt-2 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-xl flex items-center gap-2 whitespace-nowrap transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-20 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'}`}>
-                    <span className="text-xs text-gray-500 dark:text-gray-300"><strong className="text-[#0F172A] dark:text-white">{country.programs}</strong> programs</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-300"><strong className="text-[#0F172A] dark:text-white">{country.programs}</strong> {text.programsCount}</span>
                     <KeyboardArrowRightIcon fontSize="small" className="text-[#3B82F6]" />
                   </div>
                 </div>
