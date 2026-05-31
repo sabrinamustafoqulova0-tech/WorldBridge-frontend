@@ -8,7 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useLangStore } from "../../store/langStore";
 import { translations } from "../../locales/translations";
 import api from "../../lib/api";
-import { Globe, Moon, Sun, Search, ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { Globe, Moon, Sun, Search, ArrowRight, SlidersHorizontal, X, Heart } from "lucide-react";
 import AuthGateModal from "../../components/AuthGateModal";
 
 interface Program {
@@ -27,12 +27,12 @@ interface Program {
 }
 
 const CATEGORY_ACCENT: Record<string, string> = {
-  STUDIUM:     "text-sky-500 bg-sky-500/10 border-sky-500/20",
-  ARBEIT:      "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
-  AUSBILDUNG:  "text-violet-500 bg-violet-500/10 border-violet-500/20",
-  AU_PAIR:     "text-rose-500 bg-rose-500/10 border-rose-500/20",
-  INTERNSHIP:  "text-orange-500 bg-orange-500/10 border-orange-500/20",
-  VOLUNTEERING:"text-teal-500 bg-teal-500/10 border-teal-500/20",
+  STUDIUM: "text-sky-500 bg-sky-500/10 border-sky-500/20",
+  ARBEIT: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+  AUSBILDUNG: "text-violet-500 bg-violet-500/10 border-violet-500/20",
+  AU_PAIR: "text-rose-500 bg-rose-500/10 border-rose-500/20",
+  INTERNSHIP: "text-orange-500 bg-orange-500/10 border-orange-500/20",
+  VOLUNTEERING: "text-teal-500 bg-teal-500/10 border-teal-500/20",
   IMMIGRATION: "text-red-500 bg-red-500/10 border-red-500/20",
 };
 
@@ -48,6 +48,7 @@ function ProgramSkeleton() {
 }
 
 export default function ProgramsPage() {
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const { isAuthenticated } = useAuthStore();
   const { lang, setLang } = useLangStore();
   const router = useRouter();
@@ -71,6 +72,17 @@ export default function ProgramsPage() {
       setAuthGate({ open: true, target: `/programs/${programSlug}` });
     }
   };
+  const toggleFavorite = async (e: React.MouseEvent, programId: number) => {
+    e.stopPropagation();
+    if (!isAuthenticated) return;
+    if (favoriteIds.has(programId)) {
+      await api.delete(`/favorites/${programId}`);
+      setFavoriteIds(prev => { const s = new Set(prev); s.delete(programId); return s; });
+    } else {
+      await api.post(`/favorites/${programId}`);
+      setFavoriteIds(prev => new Set(prev).add(programId));
+    }
+  };
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -79,7 +91,7 @@ export default function ProgramsPage() {
       const data = res.data;
       const list: Program[] = Array.isArray(data) ? data
         : Array.isArray(data?.items) ? data.items
-        : Array.isArray(data?.results) ? data.results : [];
+          : Array.isArray(data?.results) ? data.results : [];
       setPrograms(list);
       setFiltered(list);
       const cats = Array.from(new Set(list.map((p) => p.category).filter(Boolean)));
@@ -96,6 +108,13 @@ export default function ProgramsPage() {
     }
     setFiltered(res);
   }, [search, selectedCategory, programs]);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    api.get("/favorites").then((res) => {
+      const ids = new Set<number>((res.data.items || []).map((f: any) => f.program_id));
+      setFavoriteIds(ids);
+    }).catch(() => { });
+  }, [isAuthenticated]);
 
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)]">
@@ -260,8 +279,22 @@ export default function ProgramsPage() {
                   </div>
 
                   {/* Arrow */}
-                  <div className="shrink-0 w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all mt-1">
-                    <ArrowRight size={14} />
+                  {/* Arrow */}
+                  <div className="flex items-center gap-2 shrink-0 mt-1">
+                    {isAuthenticated && (
+                      <button
+                        onClick={(e) => toggleFavorite(e, program.id)}
+                        className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${favoriteIds.has(program.id)
+                          ? "border-rose-500/30 text-rose-500 bg-rose-500/10"
+                          : "border-[var(--border)] text-[var(--muted)] hover:border-rose-500/30 hover:text-rose-500"
+                          }`}
+                      >
+                        <Heart size={14} fill={favoriteIds.has(program.id) ? "currentColor" : "none"} />
+                      </button>
+                    )}
+                    <div className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all">
+                      <ArrowRight size={14} />
+                    </div>
                   </div>
                 </div>
               </button>

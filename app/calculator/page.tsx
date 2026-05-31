@@ -6,19 +6,19 @@ import { useTheme } from "next-themes";
 import { useAuthStore } from "../../store/authStore";
 import { useLangStore } from "../../store/langStore";
 import { translations } from "../../locales/translations";
-import { 
-  Globe, 
-  Moon, 
-  Sun, 
-  Calculator, 
-  Plane, 
-  Home as HomeIcon, 
-  Utensils, 
-  Bus, 
-  Activity, 
-  Wifi, 
-  Sparkles, 
-  X, 
+import {
+  Globe,
+  Moon,
+  Sun,
+  Calculator,
+  Plane,
+  Home as HomeIcon,
+  Utensils,
+  Bus,
+  Activity,
+  Wifi,
+  Sparkles,
+  X,
   ArrowRight,
   DollarSign
 } from "lucide-react";
@@ -166,7 +166,7 @@ export default function CalculatorPage() {
 
         <div className="flex items-center space-x-3">
           {mounted && (
-            <button 
+            <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
             >
@@ -200,10 +200,10 @@ export default function CalculatorPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-5 md:px-8 w-full mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
-        
+
         {/* INPUTS PANEL — 7 columns */}
         <div className="lg:col-span-7 space-y-6">
-          
+
           {/* Active Offer Sync Banner */}
           {activeOffer && (
             <div className="bg-[var(--accent-dim)] border border-[var(--accent)]/30 rounded-2xl p-4 flex items-center justify-between animate-in fade-in duration-300">
@@ -234,11 +234,10 @@ export default function CalculatorPage() {
                 <button
                   key={c}
                   onClick={() => handleCountryClick(c)}
-                  className={`py-2 px-1 rounded-lg text-xs font-semibold transition-all truncate ${
-                    selectedCountry === c
+                  className={`py-2 px-1 rounded-lg text-xs font-semibold transition-all truncate ${selectedCountry === c
                       ? "bg-[var(--foreground)] text-[var(--background)]"
                       : "bg-[var(--card)] border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)]"
-                  }`}
+                    }`}
                 >
                   {c}
                 </button>
@@ -257,11 +256,10 @@ export default function CalculatorPage() {
                     setDuration(d);
                     setActiveOffer(null);
                   }}
-                  className={`py-2 rounded-lg text-xs font-semibold transition-all ${
-                    duration === d
+                  className={`py-2 rounded-lg text-xs font-semibold transition-all ${duration === d
                       ? "bg-[var(--accent)] text-white"
                       : "bg-[var(--card)] border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)]"
-                  }`}
+                    }`}
                 >
                   {d} мес.
                 </button>
@@ -272,7 +270,7 @@ export default function CalculatorPage() {
           {/* Salary & Savings Inputs */}
           <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-5">
             <h2 className="text-sm font-bold tracking-tight">Ваши финансы</h2>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-[var(--muted)]">Ежемесячная зарплата (USD)</span>
@@ -315,7 +313,7 @@ export default function CalculatorPage() {
           {/* One-time costs switches */}
           <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-4">
             <h2 className="text-sm font-bold tracking-tight">Разовые расходы</h2>
-            
+
             <div className="space-y-3.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-semibold">
@@ -324,7 +322,7 @@ export default function CalculatorPage() {
                   </div>
                   <span>Авиаперелет (~${country.flight})</span>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     setIncludeFlight(!includeFlight);
                     setActiveOffer(null);
@@ -342,7 +340,7 @@ export default function CalculatorPage() {
                   </div>
                   <span>Оформление визы (~${country.visa})</span>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     setIncludeVisa(!includeVisa);
                     setActiveOffer(null);
@@ -358,13 +356,12 @@ export default function CalculatorPage() {
 
         {/* SUMMARY PANEL — 5 columns */}
         <div className="lg:col-span-5 space-y-6">
-          
+
           {/* Balance card */}
-          <div className={`rounded-2xl p-6 text-white relative overflow-hidden shadow-sm transition-all duration-300 ${
-            isPositive 
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20' 
+          <div className={`rounded-2xl p-6 text-white relative overflow-hidden shadow-sm transition-all duration-300 ${isPositive
+              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20'
               : 'bg-gradient-to-br from-rose-500 to-red-600 shadow-rose-500/20'
-          }`}>
+            }`}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-[40px] pointer-events-none" />
             <div className="relative space-y-2">
               <p className="text-white/80 font-bold uppercase tracking-widest text-[9px]">
@@ -382,7 +379,7 @@ export default function CalculatorPage() {
           {/* Monthly Items */}
           <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-4">
             <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)]">Ежемесячные расходы</h3>
-            
+
             <div className="space-y-3">
               {EXPENSE_ITEMS.map((item) => (
                 <div key={item.label} className="flex items-center justify-between text-xs">
@@ -395,7 +392,7 @@ export default function CalculatorPage() {
                   <span className="font-bold text-[var(--foreground)]">${item.amount.toFixed(0)}</span>
                 </div>
               ))}
-              
+
               <div className="pt-3.5 mt-3.5 border-t border-[var(--border)] flex items-center justify-between">
                 <span className="font-bold text-xs">Итого в месяц</span>
                 <span className="text-base font-extrabold text-[var(--accent)]">${monthlyExpenses.toFixed(0)}</span>
@@ -406,7 +403,7 @@ export default function CalculatorPage() {
           {/* Full Summary Table */}
           <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-3 text-xs">
             <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)] mb-1">Итоговый расчёт</h3>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between font-semibold">
                 <span className="text-[var(--muted)]">Расходы за {duration} мес.</span>
@@ -426,7 +423,7 @@ export default function CalculatorPage() {
                 <span className="text-[var(--muted)]">Накопления</span>
                 <span className="text-emerald-500">+${savings.toLocaleString()}</span>
               </div>
-              
+
               <div className="pt-3 mt-3 border-t border-[var(--border)] flex justify-between items-center">
                 <span className="font-bold text-xs">Итоговый баланс</span>
                 <span className={`font-extrabold text-sm ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -448,9 +445,9 @@ export default function CalculatorPage() {
       {/* Modern High-End Offers Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
-          
+
           <div className="w-full max-w-md bg-[var(--background)] ring-1 ring-[var(--border)] p-5 rounded-2xl flex flex-col shadow-2xl relative overflow-hidden transition-all">
-            
+
             {/* Ambient glows inside modal */}
             <div className="absolute top-0 right-1/4 w-[150px] h-[150px] bg-[var(--accent)]/10 rounded-full blur-[40px] pointer-events-none" />
 
@@ -474,8 +471,8 @@ export default function CalculatorPage() {
                 // Choose Offer vs Continue Manually
                 <div className="space-y-4">
                   <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    Вы выбрали страну: <strong className="text-[var(--foreground)]">{pendingCountry}</strong>.<br/><br/>
-                    На нашей платформе есть готовые, проверенные программы стажировок и обучения для этого направления. 
+                    Вы выбрали страну: <strong className="text-[var(--foreground)]">{pendingCountry}</strong>.<br /><br />
+                    На нашей платформе есть готовые, проверенные программы стажировок и обучения для этого направления.
                     Вы можете автоматически загрузить параметры программы в калькулятор или настроить все расходы вручную.
                   </p>
 
@@ -500,7 +497,7 @@ export default function CalculatorPage() {
                   <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted)]">
                     Доступные программы в стране {pendingCountry}:
                   </p>
-                  
+
                   <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1 scrollbar-none">
                     {PROGRAMS_OFFERS[pendingCountry] && PROGRAMS_OFFERS[pendingCountry].length > 0 ? (
                       PROGRAMS_OFFERS[pendingCountry].map((offer) => (

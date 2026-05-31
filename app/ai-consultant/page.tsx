@@ -93,7 +93,7 @@ export default function AIConsultantPage() {
     try {
       const payload = { ...formData };
       if (payload.desired_country === "any") delete (payload as any).desired_country;
-      const res = await api.post("/ai/recommend", payload);
+      const res = await api.post("/ai/consultation", payload);
       setResult(res.data);
     } catch (err: any) {
       setError(err.response?.data?.detail || "Ошибка при получении рекомендаций. Попробуйте снова.");
@@ -243,7 +243,7 @@ export default function AIConsultantPage() {
 
             {/* Desired Country */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-[var(--muted)]">Желаемая страна (опционально)</label>
+              <label className="block text-xs font-semibold text-[var(--muted)]"> страна (опционально)</label>
               <select name="desired_country" value={formData.desired_country} onChange={handleChange} className={inputCls}>
                 <option value="any">Любая страна — доверьтесь AI</option>
                 <option value="de">🇩🇪 Германия</option>

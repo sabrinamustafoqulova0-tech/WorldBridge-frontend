@@ -10,17 +10,18 @@ import { useLangStore } from "../../../store/langStore";
 import { translations } from "../../../locales/translations";
 import { getLocalizedField } from "../../../utils/langHelper";
 import AuthGateModal from "../../../components/AuthGateModal";
-import { 
-  ArrowLeft, 
-  Globe, 
-  Moon, 
-  Sun, 
-  Sparkles, 
-  Lock, 
+import {
+  ArrowLeft,
+  Globe,
+  Moon,
+  Sun,
+  Sparkles,
+  Lock,
   ChevronDown,
   ArrowRight,
   Compass
 } from "lucide-react";
+import router from "next/router";
 
 interface Country {
   id: number;
@@ -48,12 +49,12 @@ interface FAQ {
 }
 
 const CATEGORY_STYLE: Record<string, { bg: string, text: string, border: string }> = {
-  STUDIUM:     { bg: "bg-sky-500/10", text: "text-sky-500", border: "border-sky-500/20" },
-  ARBEIT:      { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" },
-  AUSBILDUNG:  { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" },
-  AU_PAIR:     { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" },
-  INTERNSHIP:  { bg: "bg-orange-500/10", text: "text-orange-500", border: "border-orange-500/20" },
-  VOLUNTEERING:{ bg: "bg-teal-500/10", text: "text-teal-500", border: "border-teal-500/20" },
+  STUDIUM: { bg: "bg-sky-500/10", text: "text-sky-500", border: "border-sky-500/20" },
+  ARBEIT: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" },
+  AUSBILDUNG: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" },
+  AU_PAIR: { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" },
+  INTERNSHIP: { bg: "bg-orange-500/10", text: "text-orange-500", border: "border-orange-500/20" },
+  VOLUNTEERING: { bg: "bg-teal-500/10", text: "text-teal-500", border: "border-teal-500/20" },
   IMMIGRATION: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20" },
 };
 
@@ -81,7 +82,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
   const [loading, setLoading] = useState(true);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [authGate, setAuthGate] = useState<{ open: boolean; target: string }>({ open: false, target: "" });
-
+  const router = useRouter();
   const handleProgramClick = (programSlug: string) => {
     if (isAuthenticated) {
       router.push(`/programs/${programSlug}`);
@@ -144,7 +145,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
 
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] flex flex-col font-sans">
-      
+
       {/* ─── Navbar ─────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
         <div className="flex items-center gap-4">
@@ -162,7 +163,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
 
         <div className="flex items-center space-x-3">
           {mounted && (
-            <button 
+            <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
             >
@@ -184,7 +185,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full glass border border-[var(--border)] text-5xl shadow-xl select-none animate-float">
             {country.flag_emoji}
           </div>
-          
+
           <div className="space-y-3">
             <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)]">
               {programs.length} {text.programs}
@@ -201,7 +202,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
 
       {/* ─── Main Content — split asymmetric layout ────────────────── */}
       <div className="max-w-7xl mx-auto px-5 md:px-8 pb-24 w-full grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 xl:gap-20 items-start">
-        
+
         {/* Left Column: Programs (Non-boring layout) */}
         <section className="space-y-8">
           <div>
@@ -259,7 +260,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
 
         {/* Right Column: FAQ & AI Guidance (Modern refitted look) */}
         <section className="space-y-12">
-          
+
           {/* FAQ Segment (Disclosure block) */}
           {faqs.length > 0 && (
             <div className="space-y-6">
@@ -272,8 +273,8 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
                 {faqs.map((faq, index) => {
                   const isOpen = openFaqIndex === index;
                   return (
-                    <div 
-                      key={faq.id} 
+                    <div
+                      key={faq.id}
                       className="border border-[var(--border)] rounded-2xl bg-[var(--card)] overflow-hidden transition-all duration-300"
                     >
                       <button
@@ -285,7 +286,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
                           <ChevronDown size={15} />
                         </div>
                       </button>
-                      
+
                       <div className={`transition-all duration-300 ease-in-out ${isOpen ? "max-h-[300px] border-t border-[var(--border)]" : "max-h-0"} overflow-hidden`}>
                         <div className="px-5 py-4 text-xs sm:text-sm text-[var(--muted)] leading-relaxed whitespace-pre-line bg-[var(--background)]/30">
                           {faq.answer || "Войдите для просмотра ответа на данный вопрос."}
@@ -321,16 +322,16 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
 
               <div className="pt-2">
                 {isAuthenticated ? (
-                  <Link 
-                    href="/ai-consultant" 
+                  <Link
+                    href="/ai-consultant"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white font-semibold text-xs hover:bg-emerald-500 transition-all active:scale-[0.98]"
                   >
                     <Sparkles size={12} />
                     {text.aiBtnAuth}
                   </Link>
                 ) : (
-                  <Link 
-                    href="/register" 
+                  <Link
+                    href="/register"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border)] text-[var(--foreground)] font-semibold text-xs hover:border-[var(--accent)]/40 hover:bg-[var(--accent-dim)] transition-all active:scale-[0.98]"
                   >
                     <Lock size={12} />
