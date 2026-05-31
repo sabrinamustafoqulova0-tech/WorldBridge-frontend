@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import PublicIcon from '@mui/icons-material/Public';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
 import { useLangStore } from "../../store/langStore";
+import { useAIConsultantStore } from "../../store/aiConsultantStore";
 import { translations } from "../../locales/translations";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { Globe, Moon, Sun, User, LogOut, Sparkles, Plus, Minus, RotateCcw, MapPin } from "lucide-react";
 
 const COUNTRIES = [
   { id: "de", name: "Germany", programs: 142, x: 52, y: 33 },
@@ -37,202 +35,294 @@ const CONNECTIONS = [
   ["fi", "cn"], ["pl", "cn"], ["at", "cn"], ["at", "tr"], ["tr", "cn"], ["tr", "pl"]
 ];
 
+const PROJECTS: Record<string, any[]> = {
+  de: [
+    { id: "p1", name: "Berlin IT Hub", description: "Software Engineering", city: "Berlin", x: 52.5, y: 31.5 },
+    { id: "p2", name: "Munich Auto", description: "Mechanical Design", city: "Munich", x: 51.5, y: 33.5 },
+  ],
+  fr: [{ id: "p3", name: "Paris Design", description: "UI/UX Internship", city: "Paris", x: 47.5, y: 38 }],
+  us: [
+    { id: "p4", name: "SV Tech", description: "Backend Engineering", city: "San Francisco", x: 15, y: 38 },
+    { id: "p5", name: "NY Finance", description: "Quantitative Analysis", city: "New York", x: 28, y: 37 },
+  ],
+  ca: [{ id: "p6", name: "Toronto AI", description: "Machine Learning", city: "Toronto", x: 26, y: 30 }],
+  pl: [{ id: "p7", name: "Warsaw Logistics", description: "Supply Chain", city: "Warsaw", x: 57.5, y: 31 }],
+  tr: [{ id: "p8", name: "Istanbul Trade", description: "Logistics", city: "Istanbul", x: 61, y: 43.5 }],
+};
+
 export default function HomePage() {
   const { user, isAuthenticated, isLoading, logout } = useAuthStore();
   const { lang, setLang } = useLangStore();
+  const openAIConsultant = useAIConsultantStore((s) => s.openWith);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+  const [hoveredProject, setHoveredProject] = useState<string | null>(null);
 
   const text = translations[lang]?.home || translations.ru.home;
   const navText = translations[lang]?.nav || translations.ru.nav;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] dark:bg-[#0F172A]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 dark:border-white/20 border-t-[#3B82F6]"></div>
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--background)]">
+        <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
+  const handleLogout = () => { logout(); router.push("/login"); };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-white font-sans selection:bg-[#3B82F6] selection:text-white overflow-x-hidden transition-colors duration-300">
-      
-      {/* Premium Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/60 dark:bg-[#0F172A]/60 backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.05] transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="bg-[#0F172A] dark:bg-white/10 p-1.5 rounded-lg text-white border border-transparent dark:border-white/10 group-hover:bg-[#3B82F6] dark:group-hover:bg-white/20 transition-all shadow-sm dark:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-              <PublicIcon fontSize="small" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight text-[#0F172A] dark:text-white group-hover:text-[#3B82F6] dark:group-hover:text-blue-100 transition-colors">WorldBridge</span>
-          </Link>
+    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] flex flex-col overflow-x-hidden">
 
-          <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-500 dark:text-gray-400">
-            <Link href="/programs" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">{navText.programs}</Link>
-            <Link href="/countries" className="text-[#0F172A] dark:text-white drop-shadow-[0_0_10px_rgba(15,23,42,0.1)] dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{navText.destinations}</Link>
-            <Link href="/articles" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">{navText.insights}</Link>
-            <Link href="/calculator" className="hover:text-[#0F172A] dark:hover:text-white transition-colors">{navText.estimator}</Link>
+      {/* ─── Navbar ─────────────────────────────────────────────── */}
+      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)] dark:glass light:glass-light">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
+            <Globe size={13} className="text-white" strokeWidth={2.5} />
           </div>
+          <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
+        </Link>
 
-          <div className="flex items-center space-x-4">
-            {mounted && (
-              <select 
-                className="bg-transparent text-sm font-medium text-gray-500 dark:text-gray-400 focus:outline-none cursor-pointer hover:text-[#0F172A] dark:hover:text-white transition-colors appearance-none"
-                value={lang}
-                onChange={(e) => setLang(e.target.value as any)}
-              >
-                <option value="ru">Русский</option>
-                <option value="en">English</option>
-                <option value="tg">Тоҷикӣ</option>
-              </select>
-            )}
+        <div className="hidden md:flex items-center gap-6 text-[13px] font-medium text-[var(--muted)]">
+          <Link href="/programs" className="hover:text-[var(--foreground)] transition-colors">{navText.programs}</Link>
+          <Link href="/countries" className="font-semibold text-[var(--foreground)]">{navText.destinations}</Link>
+          <Link href="/articles" className="hover:text-[var(--foreground)] transition-colors">{navText.insights}</Link>
+          <Link href="/calculator" className="hover:text-[var(--foreground)] transition-colors">{navText.estimator}</Link>
+        </div>
 
-            {mounted && (
-              <button 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-300"
-                title="Toggle Dark Mode"
-              >
-                {theme === "dark" ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+        <div className="flex items-center gap-2">
+          {mounted && (
+            <select
+              className="bg-transparent text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] focus:outline-none cursor-pointer transition-colors appearance-none"
+              value={lang} onChange={(e) => setLang(e.target.value as any)}
+            >
+              <option value="ru">RU</option>
+              <option value="en">EN</option>
+              <option value="tg">TG</option>
+            </select>
+          )}
+
+          {mounted && (
+            <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]">
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+          )}
+
+          {mounted && (
+            <button onClick={() => openAIConsultant("consultation")}
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent-dim)] border border-[var(--accent)]/20 text-[var(--accent)] text-[12px] font-semibold hover:bg-[var(--accent)]/15 transition-all">
+              <Sparkles size={12} className="animate-pulse-dot" />
+              AI
+            </button>
+          )}
+
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2 ml-1">
+              <Link href="/profile"
+                className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+                <User size={14} />
+                <span className="hidden sm:inline">{user?.full_name?.split(" ")[0] || navText.profile}</span>
+              </Link>
+              <button onClick={handleLogout}
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]">
+                <LogOut size={13} />
               </button>
-            )}
-
-            {isAuthenticated ? (
-              <div className="flex items-center gap-4">
-                <Link href="/profile" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[#0F172A] dark:hover:text-white transition-colors">
-                  <AccountCircleIcon fontSize="small" />
-                  <span className="hidden sm:inline">{user?.full_name || navText.profile}</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm font-medium text-gray-500 hover:text-[#0F172A] dark:hover:text-white transition-colors"
-                >
-                  {navText.logout}
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4 text-sm font-medium">
-                <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-[#0F172A] dark:hover:text-white transition-colors">
-                  {navText.login}
-                </Link>
-                <Link href="/register" className="bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] px-4 py-1.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-md dark:shadow-[0_0_20px_rgba(255,255,255,0.15)] dark:hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]">
-                  {navText.signup}
-                </Link>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <Link href="/register"
+              className="ml-1 px-3 py-1.5 rounded-lg bg-[var(--foreground)] text-[var(--background)] text-[13px] font-semibold hover:opacity-85 transition-all">
+              {navText.signup}
+            </Link>
+          )}
         </div>
       </nav>
 
-      {/* Hero Section & Network Map */}
-      <main className="pt-32 pb-24 relative min-h-screen flex flex-col items-center justify-center">
-        
-        {/* Background Ambient Glows */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#3B82F6]/10 dark:bg-[#3B82F6]/20 rounded-full blur-[120px] pointer-events-none mix-blend-multiply dark:mix-blend-screen transition-colors duration-300"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-purple-400/10 dark:bg-[#0ea5e9]/10 rounded-full blur-[150px] pointer-events-none mix-blend-multiply dark:mix-blend-screen transition-colors duration-300"></div>
-
-        <div className="max-w-4xl mx-auto px-6 text-center z-10 relative mb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 text-xs font-semibold uppercase tracking-widest mb-8 shadow-sm dark:shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-colors duration-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse"></span>
-            {text.badge}
+      {/* ─── Hero text ──────────────────────────────────────────── */}
+      <div className="pt-14 px-5 md:px-8">
+        <div className="max-w-7xl mx-auto py-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] mb-2">
+              {COUNTRIES.length} destinations
+            </p>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tighter reveal-up">
+              {text.title1}{" "}
+              <span className="text-[var(--accent)]">{text.title2}</span>
+            </h1>
+            <p className="mt-2 text-sm text-[var(--muted)] max-w-[52ch] reveal-up delay-100">{text.subtitle}</p>
           </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-gray-900 to-gray-500 dark:from-white dark:to-white/60 mb-6 leading-tight transition-colors duration-300">
-            {text.title1} <br className="hidden md:block"/> {text.title2}
-          </h1>
-          
-          <p className="text-lg text-gray-500 dark:text-gray-400 font-light max-w-2xl mx-auto leading-relaxed transition-colors duration-300">
-            {text.subtitle}
-          </p>
+          <div className="flex items-center gap-3 text-[13px] font-medium reveal-up delay-200">
+            <Link href="/programs"
+              className="px-4 py-2 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/30 hover:bg-[var(--accent-dim)] transition-all text-[var(--muted)] hover:text-[var(--accent)]">
+              {navText.programs}
+            </Link>
+            <Link href="/calculator"
+              className="px-4 py-2 rounded-xl bg-[var(--foreground)] text-[var(--background)] hover:opacity-85 transition-all">
+              {navText.estimator}
+            </Link>
+          </div>
         </div>
+      </div>
 
-        {/* Interactive Country Network */}
-        <div className="w-full max-w-6xl mx-auto relative h-[600px] rounded-3xl border border-gray-200 dark:border-white/[0.05] bg-white/40 dark:bg-[#0F172A]/40 backdrop-blur-2xl shadow-xl dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden transition-colors duration-300">
-          
-          {/* Subtle World Map Background */}
-          <div 
-            className="absolute inset-0 opacity-[0.25] dark:opacity-[0.15] pointer-events-none" 
-            style={{ 
-              backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`, 
-              backgroundSize: '105% auto', 
-              backgroundPosition: 'center 45%', 
-              backgroundRepeat: 'no-repeat',
-              filter: theme === 'dark' ? 'invert(1)' : 'none'
-            }}
-          ></div>
+      {/* ─── Interactive Map ─────────────────────────────────────── */}
+      <div className="flex-1 px-5 md:px-8 pb-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative h-[60vh] md:h-[70vh] min-h-[480px] rounded-3xl border border-[var(--border)] overflow-hidden bg-[var(--card)] shadow-[0_20px_60px_-20px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)]">
+            <TransformWrapper
+              initialScale={1} minScale={1} maxScale={6}
+              centerZoomedOut doubleClick={{ disabled: false }} wheel={{ step: 0.1 }}
+            >
+              {({ zoomIn, zoomOut, resetTransform, state }) => {
+                const scale = state.scale;
+                return (
+                  <>
+                    {/* Zoom controls */}
+                    <div className="absolute top-4 right-4 z-50 flex flex-col gap-1.5">
+                      {[
+                        { icon: <Plus size={14} />, action: zoomIn },
+                        { icon: <Minus size={14} />, action: zoomOut },
+                        { icon: <RotateCcw size={12} />, action: resetTransform },
+                      ].map(({ icon, action }, i) => (
+                        <button key={i} onClick={() => action()}
+                          className="w-8 h-8 rounded-xl glass border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--accent)]/30 transition-all">
+                          {icon}
+                        </button>
+                      ))}
+                    </div>
 
-          {/* SVG Lines */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-            {CONNECTIONS.map(([id1, id2], i) => {
-              const c1 = COUNTRIES.find(c => c.id === id1);
-              const c2 = COUNTRIES.find(c => c.id === id2);
-              if (!c1 || !c2) return null;
-              
-              const isHoveredLine = hoveredCountry === id1 || hoveredCountry === id2;
-              
-              return (
-                <line
-                  key={i}
-                  x1={`${c1.x}%`}
-                  y1={`${c1.y}%`}
-                  x2={`${c2.x}%`}
-                  y2={`${c2.y}%`}
-                  className={`transition-all duration-500 ${isHoveredLine ? 'stroke-[#3B82F6]' : 'stroke-gray-300 dark:stroke-slate-800'}`}
-                  strokeWidth={isHoveredLine ? "2" : "1"}
-                  style={{ filter: isHoveredLine ? "drop-shadow(0 0 8px rgba(59,130,246,0.6))" : "none" }}
-                />
-              );
-            })}
-          </svg>
+                    {/* Scale hint */}
+                    <div className="absolute bottom-4 left-4 z-50">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[var(--border)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse-dot" />
+                        <span className="text-[11px] font-medium text-[var(--muted)]">
+                          {scale > 1.8 ? "Видны проекты" : "Приблизьтесь для деталей"}
+                        </span>
+                      </div>
+                    </div>
 
-          {/* Country Nodes */}
-          {COUNTRIES.map((country) => {
-            const isHovered = hoveredCountry === country.id;
-            
-            return (
-              <div
-                key={country.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center cursor-pointer group z-20"
-                style={{ left: `${country.x}%`, top: `${country.y}%` }}
-                onMouseEnter={() => setHoveredCountry(country.id)}
-                onMouseLeave={() => setHoveredCountry(null)}
-                onClick={() => router.push(`/countries/${country.id}`)}
-              >
-                {/* Glow Effect */}
-                <div className={`absolute w-12 h-12 rounded-full bg-[#3B82F6]/20 dark:bg-[#3B82F6]/30 blur-md transition-all duration-300 ${isHovered ? 'scale-150 opacity-100' : 'scale-0 opacity-0'}`}></div>
-                
-                {/* Node Core */}
-                <div className={`relative w-3 h-3 rounded-full border border-gray-300 dark:border-white/20 transition-all duration-300 shadow-sm dark:shadow-[0_0_10px_rgba(255,255,255,0.2)] ${isHovered ? 'bg-[#3B82F6] scale-150 border-[#3B82F6]' : 'bg-gray-200 dark:bg-white/40 group-hover:bg-gray-400 dark:group-hover:bg-white'}`}></div>
-                
-                {/* Tooltip / Label */}
-                <div className={`absolute top-6 flex flex-col items-center transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-70 -translate-y-1'}`}>
-                  <span className={`text-sm font-medium whitespace-nowrap ${isHovered ? 'text-[#0F172A] dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
-                    {country.name}
-                  </span>
-                  
-                  <div className={`mt-2 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-md border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-xl flex items-center gap-2 whitespace-nowrap transition-all duration-300 overflow-hidden ${isHovered ? 'max-h-20 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'}`}>
-                    <span className="text-xs text-gray-500 dark:text-gray-300"><strong className="text-[#0F172A] dark:text-white">{country.programs}</strong> {text.programsCount}</span>
-                    <KeyboardArrowRightIcon fontSize="small" className="text-[#3B82F6]" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                    <TransformComponent
+                      wrapperStyle={{ width: "100%", height: "100%" }}
+                      contentStyle={{ width: "100%", height: "100%" }}
+                    >
+                      <div className="relative w-full h-full min-h-[480px] md:min-h-[600px]">
+                        {/* World map bg */}
+                        <div className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+                          style={{
+                            opacity: scale > 1.8 ? 0 : (theme === "dark" ? 0.12 : 0.2),
+                            backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`,
+                            backgroundSize: "105% auto", backgroundPosition: "center 45%", backgroundRepeat: "no-repeat",
+                            filter: theme === "dark" ? "invert(1)" : "none",
+                          }} />
+
+                        {/* Detailed map */}
+                        <div className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+                          style={{
+                            opacity: scale > 1.8 ? (theme === "dark" ? 0.2 : 0.3) : 0,
+                            backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')`,
+                            backgroundSize: "100% auto", backgroundPosition: "center 50%", backgroundRepeat: "no-repeat",
+                            filter: theme === "dark" ? "invert(1) hue-rotate(180deg)" : "none",
+                          }} />
+
+                        {/* SVG connection lines */}
+                        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
+                          {CONNECTIONS.map(([id1, id2], i) => {
+                            const c1 = COUNTRIES.find((c) => c.id === id1);
+                            const c2 = COUNTRIES.find((c) => c.id === id2);
+                            if (!c1 || !c2) return null;
+                            const isHot = hoveredCountry === id1 || hoveredCountry === id2;
+                            return (
+                              <line key={i}
+                                x1={`${c1.x}%`} y1={`${c1.y}%`} x2={`${c2.x}%`} y2={`${c2.y}%`}
+                                className="transition-all duration-400"
+                                stroke={isHot ? "rgba(16,185,129,0.6)" : "rgba(107,114,128,0.18)"}
+                                strokeWidth={isHot ? "1.5" : "0.8"}
+                                style={{ filter: isHot ? "drop-shadow(0 0 4px rgba(16,185,129,0.4))" : "none" }}
+                              />
+                            );
+                          })}
+                        </svg>
+
+                        {/* Country nodes */}
+                        {COUNTRIES.map((country) => {
+                          const isHov = hoveredCountry === country.id;
+                          return (
+                            <div key={country.id}
+                              className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer group transition-all duration-300 ${scale > 2 ? "opacity-20 pointer-events-none" : "opacity-100"} ${isHov ? "z-50" : "z-20"}`}
+                              style={{ left: `${country.x}%`, top: `${country.y}%` }}
+                              onMouseEnter={() => setHoveredCountry(country.id)}
+                              onMouseLeave={() => setHoveredCountry(null)}
+                              onClick={(e) => { e.stopPropagation(); router.push(`/countries/${country.id}`); }}
+                            >
+                              {/* Hit area */}
+                              <div className="absolute w-14 h-14 rounded-full z-30" />
+
+                              {/* Glow ring */}
+                              <div className={`absolute w-10 h-10 rounded-full bg-[var(--accent)]/15 blur-md transition-all duration-300 ${isHov ? "scale-150 opacity-100" : "scale-0 opacity-0"}`} />
+
+                              {/* Node */}
+                              <div className={`relative w-2.5 h-2.5 rounded-full border transition-all duration-300 ${isHov
+                                ? "bg-[var(--accent)] border-[var(--accent)] scale-150 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                : "bg-[var(--muted)]/40 border-[var(--border)] group-hover:bg-[var(--muted)] group-hover:scale-125"}`} />
+
+                              {/* Label + tooltip */}
+                              <div className={`absolute top-5 flex flex-col items-center transition-all duration-300 ${isHov ? "opacity-100 translate-y-0" : "opacity-60 -translate-y-0.5"}`}>
+                                <span className={`text-[11px] font-semibold whitespace-nowrap ${isHov ? "text-[var(--foreground)]" : "text-[var(--muted)]"}`}>
+                                  {country.name}
+                                </span>
+                                <div className={`mt-1.5 px-2.5 py-1.5 rounded-xl glass border border-[var(--border)] flex flex-col gap-0.5 whitespace-nowrap transition-all duration-300 overflow-hidden ${isHov ? "max-h-16 opacity-100" : "max-h-0 opacity-0"}`}>
+                                  <span className="text-[10px] text-[var(--muted)] flex items-center justify-between gap-3">
+                                    <strong className="text-[var(--foreground)]">{country.programs}</strong>
+                                    {text.programsCount}
+                                  </span>
+                                  <span className="text-[10px] text-[var(--accent)]">
+                                    {PROJECTS[country.id]?.length || 0} проектов
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Project nodes (zoomed) */}
+                        {scale > 1.8 && Object.entries(PROJECTS).map(([countryId, projects]) =>
+                          projects.map((proj) => {
+                            const isHov = hoveredProject === proj.id;
+                            return (
+                              <div key={proj.id}
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer z-40 transition-all duration-500"
+                                style={{ left: `${proj.x}%`, top: `${proj.y}%`, opacity: scale > 2 ? 1 : 0 }}
+                                onMouseEnter={() => setHoveredProject(proj.id)}
+                                onMouseLeave={() => setHoveredProject(null)}
+                                onClick={(e) => { e.stopPropagation(); router.push(`/countries/${countryId}`); }}
+                              >
+                                <div className="absolute w-10 h-10 rounded-full z-30" />
+                                <div className={`relative w-2 h-2 rounded-full bg-[var(--accent)] border border-[var(--background)] transition-all duration-300 ${isHov ? "scale-175" : "animate-pulse-dot"}`} />
+                                <div className={`absolute top-3.5 flex flex-col items-center transition-all duration-300 ${isHov ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+                                  <div className="mt-1 p-2.5 rounded-xl glass border border-[var(--accent)]/20 flex flex-col gap-0.5 whitespace-nowrap z-50 shadow-xl">
+                                    <span className="text-[11px] font-bold text-[var(--foreground)]">{proj.name}</span>
+                                    <span className="text-[10px] text-[var(--muted)]">{proj.description}</span>
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--accent)] mt-0.5">
+                                      <MapPin size={8} className="inline mr-0.5" />{proj.city}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </TransformComponent>
+                  </>
+                );
+              }}
+            </TransformWrapper>
+          </div>
         </div>
-        
-      </main>
-
+      </div>
     </div>
   );
 }

@@ -20,13 +20,6 @@ export default function ProgramCard({ program }: { program: Program }) {
   const { isAuthenticated } = useAuthStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleDetailsClick = (e: React.MouseEvent) => {
-    if (!isAuthenticated) {
-      e.preventDefault();
-      setIsModalOpen(true);
-    }
-  };
-
   const categoryColors: Record<string, string> = {
     STUDIUM: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
     ARBEIT: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
@@ -66,22 +59,10 @@ export default function ProgramCard({ program }: { program: Program }) {
         <div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5">
           <Link
             href={`/programs/${program.slug}`}
-            onClick={handleDetailsClick}
             className="group flex items-center justify-between w-full text-sm font-bold text-[#3B82F6] hover:text-blue-700 transition-colors"
           >
-            {isAuthenticated ? (
-              <>
-                <span>Подробнее о программе</span>
-                <ArrowForwardIcon fontSize="small" className="group-hover:translate-x-1 transition-transform" />
-              </>
-            ) : (
-              <>
-                <span className="flex items-center gap-2">
-                  <LockIcon fontSize="small" /> Подробнее
-                </span>
-                <span className="text-gray-400 font-normal">Нужен вход</span>
-              </>
-            )}
+            <span>Подробнее о программе</span>
+            <ArrowForwardIcon fontSize="small" className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>

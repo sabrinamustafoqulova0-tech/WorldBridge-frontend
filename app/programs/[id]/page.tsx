@@ -4,17 +4,24 @@ import { useAuthStore } from "../../../store/authStore";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, use } from "react";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PublicIcon from '@mui/icons-material/Public';
-import LockIcon from '@mui/icons-material/Lock';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import InfoIcon from '@mui/icons-material/Info';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import WarningIcon from '@mui/icons-material/Warning';
 import { useTheme } from "next-themes";
 import api from "../../../lib/api";
+import { 
+  ArrowLeft, 
+  Globe, 
+  Moon, 
+  Sun, 
+  Check, 
+  AlertTriangle, 
+  ExternalLink,
+  BookOpen,
+  DollarSign,
+  Calendar,
+  Hourglass,
+  CheckCircle2,
+  Bookmark,
+  ShieldCheck
+} from "lucide-react";
 
 interface ProgramDetail {
   id: number;
@@ -39,6 +46,22 @@ interface ProgramDetail {
   career_opportunities?: string;
 }
 
+const CATEGORY_STYLE: Record<string, { bg: string, text: string, border: string }> = {
+  STUDIUM:     { bg: "bg-sky-500/10", text: "text-sky-500", border: "border-sky-500/20" },
+  ARBEIT:      { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" },
+  AUSBILDUNG:  { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" },
+  AU_PAIR:     { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" },
+  INTERNSHIP:  { bg: "bg-orange-500/10", text: "text-orange-500", border: "border-orange-500/20" },
+  VOLUNTEERING:{ bg: "bg-teal-500/10", text: "text-teal-500", border: "border-teal-500/20" },
+  IMMIGRATION: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20" },
+};
+
+const LEVEL_LABELS: Record<string, string> = {
+  BEGINNER: "Новичок",
+  INTERMEDIATE: "Средний",
+  ADVANCED: "Продвинутый",
+};
+
 export default function ProgramPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const programId = params.id;
@@ -50,25 +73,32 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
 
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string>("");
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (authLoading) return;
 
+    // Redirect to login if not authenticated (direct URL access)
     if (!isAuthenticated) {
-      router.push("/login"); // Redirect if not authenticated since this is a protected route in theory, though backend might handle it differently.
+      router.push(`/login?next=/programs/${programId}`);
       return;
     }
 
     const fetchProgram = async () => {
       setLoading(true);
+      setFetchError("");
       try {
         const res = await api.get(`/programs/${programId}`);
         setProgram(res.data);
-      } catch (error) {
+      } catch (error: any) {
+        const status = error?.response?.status;
+        if (status === 401 || status === 403) {
+          router.push(`/login?next=/programs/${programId}`);
+        } else {
+          setFetchError("not_found");
+        }
         console.error("Error fetching program data:", error);
       } finally {
         setLoading(false);
@@ -80,118 +110,119 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
 
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] dark:bg-[#0F172A]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 dark:border-white/20 border-t-[#3B82F6]"></div>
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--background)]">
+        <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  if (!program) {
+  if (fetchError === "not_found" || !program) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-center p-6 bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-white">
-        <div>
-          <h1 className="text-4xl font-bold mb-4">Программа не найдена</h1>
-          <button onClick={() => router.back()} className="text-[#3B82F6] hover:underline">Вернуться назад</button>
+      <div className="min-h-[100dvh] flex items-center justify-center text-center p-6 bg-[var(--background)] text-[var(--foreground)]">
+        <div className="max-w-md space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight">Программа не найдена</h1>
+          <button 
+            onClick={() => router.push("/programs")} 
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] hover:underline"
+          >
+            <ArrowLeft size={14} /> К списку программ
+          </button>
         </div>
       </div>
     );
   }
 
-  const categoryColors: Record<string, string> = {
-    STUDIUM: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-    ARBEIT: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-    AUSBILDUNG: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
-    AU_PAIR: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300",
-    INTERNSHIP: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
-    VOLUNTEERING: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
-    IMMIGRATION: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-  };
+  const catStyle = CATEGORY_STYLE[program.category] || { bg: "bg-[var(--border)]", text: "text-[var(--muted)]", border: "border-[var(--border)]" };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-white font-sans transition-colors duration-300 pb-20">
+    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] flex flex-col font-sans pb-24">
       
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/60 dark:bg-[#0F172A]/60 backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.05] transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 hover:text-[#3B82F6] transition-colors font-medium">
-              <ArrowBackIcon fontSize="small" /> Назад
-            </button>
-            <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div>
-            <Link href="/" className="hidden sm:flex items-center gap-3 group">
-              <div className="bg-[#0F172A] dark:bg-white/10 p-1 rounded-md text-white border border-transparent dark:border-white/10 group-hover:bg-[#3B82F6] transition-all shadow-sm">
-                <PublicIcon fontSize="small" />
-              </div>
-              <span className="text-lg font-bold text-[#0F172A] dark:text-white">WorldBridge</span>
-            </Link>
-          </div>
+      {/* ─── Navbar ─────────────────────────────────────────────── */}
+      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => router.back()} 
+            className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+          >
+            <ArrowLeft size={14} /> Назад
+          </button>
+          <div className="h-4 w-px bg-[var(--border)] hidden sm:block"></div>
+          <Link href="/" className="hidden sm:flex items-center gap-2 group">
+            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
+              <Globe size={13} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
+          </Link>
+        </div>
 
-          <div className="flex items-center space-x-4">
-            {mounted && (
-              <button 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-300"
-              >
-                {theme === "dark" ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
-              </button>
-            )}
-          </div>
+        <div className="flex items-center space-x-3">
+          {mounted && (
+            <button 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+          )}
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div className="bg-white dark:bg-[#1E293B] border-b border-gray-200 dark:border-white/5 pt-32 pb-16 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <span className={`text-sm font-bold px-4 py-1.5 rounded-full ${categoryColors[program.category] || "bg-gray-100 text-gray-800"}`}>
+      {/* ─── Hero Header Area ────────────────────────────────────── */}
+      <div className="pt-24 pb-12 px-5 md:px-8 border-b border-[var(--border)] bg-[var(--card)]/40">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
               {program.category}
             </span>
-            <span className="text-sm font-medium text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300 px-3 py-1.5 rounded-md">
-              Уровень: {program.level}
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted)]">
+              Уровень: {LEVEL_LABELS[program.level] || program.level}
             </span>
             {program.residence_permit && (
-              <span className="text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 px-3 py-1.5 rounded-md flex items-center gap-1">
-                <CheckCircleIcon fontSize="small" /> Даёт ВНЖ
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center gap-1">
+                <ShieldCheck size={11} /> Даёт ВНЖ
               </span>
             )}
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-balance">
             {program.title}
           </h1>
           
-          <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+          <p className="text-base text-[var(--muted)] leading-relaxed max-w-[62ch]">
             {program.description}
           </p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* ─── Main Columns Asymmetric Bento ───────────────────────── */}
+      <div className="max-w-4xl mx-auto px-5 md:px-8 mt-12 w-full grid grid-cols-1 md:grid-cols-[1.7fr_1.3fr] gap-12 items-start">
         
-        {/* Main Content Area */}
-        <div className="md:col-span-2 space-y-10">
+        {/* Left Column: Description & Pros/Cons */}
+        <div className="space-y-10">
           
-          <section>
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <InfoIcon className="text-[#3B82F6]" /> Описание программы
-            </h2>
-            <div className="bg-white dark:bg-[#1E293B]/50 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-white/5">
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed text-lg">
+          {/* Main Description */}
+          <section className="space-y-4">
+            <h2 className="text-lg font-bold tracking-tight">Описание программы</h2>
+            <div className="border border-[var(--border)] rounded-2xl bg-[var(--card)] p-6 md:p-8">
+              <p className="text-sm md:text-base text-[var(--muted)] leading-relaxed whitespace-pre-line font-light">
                 {program.full_description || program.description}
               </p>
             </div>
           </section>
 
+          {/* Pros & Cons (Modern Split) */}
           {(program.pros || program.cons) && (
-            <section className="grid sm:grid-cols-2 gap-6">
+            <section className="grid grid-cols-1 gap-6">
               {program.pros && (
-                <div>
-                  <h3 className="text-xl font-bold mb-4 text-green-600 dark:text-green-400">Преимущества</h3>
-                  <div className="bg-green-50 dark:bg-green-900/10 rounded-2xl p-6 border border-green-100 dark:border-green-900/20 h-full">
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold text-emerald-500 flex items-center gap-1.5">
+                    <CheckCircle2 size={15} /> Преимущества
+                  </h3>
+                  <div className="border border-emerald-500/20 rounded-2xl bg-emerald-500/[0.03] p-6 space-y-4">
                     <ul className="space-y-3">
                       {program.pros.split('\n').map((pro, i) => (
-                        <li key={i} className="flex items-start gap-3 text-green-800 dark:text-green-300">
-                          <CheckCircleIcon fontSize="small" className="mt-0.5 shrink-0" />
+                        <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
+                          <Check size={13} className="text-emerald-500 shrink-0 mt-0.5" />
                           <span>{pro}</span>
                         </li>
                       ))}
@@ -199,14 +230,17 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
                   </div>
                 </div>
               )}
+
               {program.cons && (
-                <div>
-                  <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">Сложности</h3>
-                  <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-6 border border-red-100 dark:border-red-900/20 h-full">
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold text-rose-500 flex items-center gap-1.5">
+                    <AlertTriangle size={15} /> Сложности
+                  </h3>
+                  <div className="border border-rose-500/20 rounded-2xl bg-rose-500/[0.03] p-6 space-y-4">
                     <ul className="space-y-3">
                       {program.cons.split('\n').map((con, i) => (
-                        <li key={i} className="flex items-start gap-3 text-red-800 dark:text-red-300">
-                          <WarningIcon fontSize="small" className="mt-0.5 shrink-0" />
+                        <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
+                          <AlertTriangle size={13} className="text-rose-500 shrink-0 mt-0.5" />
                           <span>{con}</span>
                         </li>
                       ))}
@@ -217,25 +251,28 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
             </section>
           )}
 
+          {/* Career Section */}
           {program.career_opportunities && (
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Карьерные перспективы</h2>
-              <div className="bg-blue-50 dark:bg-[#1E293B] rounded-2xl p-6 sm:p-8 border border-blue-100 dark:border-white/5">
-                <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
+            <section className="space-y-4">
+              <h2 className="text-lg font-bold tracking-tight">Карьерные перспективы</h2>
+              <div className="border border-[var(--border)] rounded-2xl bg-[var(--accent-dim)]/30 p-6 md:p-8">
+                <p className="text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
                   {program.career_opportunities}
                 </p>
               </div>
             </section>
           )}
 
+          {/* Required Docs */}
           {program.documents && (
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Необходимые документы</h2>
-              <div className="bg-white dark:bg-[#1E293B]/50 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-white/5">
-                <ul className="space-y-3 list-disc pl-5">
+            <section className="space-y-4">
+              <h2 className="text-lg font-bold tracking-tight">Необходимые документы</h2>
+              <div className="border border-[var(--border)] rounded-2xl bg-[var(--card)] p-6 md:p-8">
+                <ul className="space-y-3 pl-1">
                   {program.documents.split(', ').map((doc, i) => (
-                    <li key={i} className="text-gray-700 dark:text-gray-300 pl-1">
-                      {doc}
+                    <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[var(--muted)]">
+                      <Bookmark size={13} className="text-[var(--accent)] shrink-0 mt-1" />
+                      <span>{doc}</span>
                     </li>
                   ))}
                 </ul>
@@ -245,65 +282,89 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
 
         </div>
 
-        {/* Sidebar Info */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-[#1E293B]/80 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-white/5 sticky top-24">
-            <h3 className="text-lg font-bold mb-6 border-b border-gray-100 dark:border-white/10 pb-4">Краткая сводка</h3>
+        {/* Right Column: Glass Summary Bento Block */}
+        <aside className="sticky top-20 space-y-6">
+          <div className="border border-[var(--border)] rounded-3xl bg-[var(--card)] p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
+            {/* Soft Ambient Sparkle */}
+            <div className="absolute top-0 right-0 w-36 h-36 bg-[var(--accent)] rounded-full blur-[70px] opacity-10 pointer-events-none" />
+
+            <h3 className="text-base font-bold tracking-tight border-b border-[var(--border)] pb-4">
+              Краткая сводка
+            </h3>
             
-            <dl className="space-y-4 text-sm">
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400 mb-1">Требование к языку</dt>
-                <dd className="font-semibold">{program.language_requirement}</dd>
+            <div className="space-y-5 text-[13px]">
+              <div className="space-y-1">
+                <span className="text-[var(--muted)] text-[11px] block">Требование к языку</span>
+                <span className="font-semibold flex items-center gap-1.5">
+                  <BookOpen size={13} className="text-[var(--accent)]" />
+                  {program.language_requirement}
+                </span>
               </div>
               
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400 mb-1">Зарплата / Стипендия</dt>
-                <dd className="font-semibold text-green-600 dark:text-green-400">{program.salary_range}</dd>
+              <div className="space-y-1">
+                <span className="text-[var(--muted)] text-[11px] block">Зарплата / Стипендия</span>
+                <span className="font-semibold text-emerald-500 flex items-center gap-1.5">
+                  <DollarSign size={13} />
+                  {program.salary_range}
+                </span>
               </div>
               
               {program.cost && (
-                <div>
-                  <dt className="text-gray-500 dark:text-gray-400 mb-1">Расходы (оценка)</dt>
-                  <dd className="font-semibold">{program.cost}</dd>
+                <div className="space-y-1">
+                  <span className="text-[var(--muted)] text-[11px] block">Расходы (оценка)</span>
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <DollarSign size={13} className="text-red-500/80" />
+                    {program.cost}
+                  </span>
                 </div>
               )}
               
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400 mb-1">Возраст</dt>
-                <dd className="font-semibold">
+              <div className="space-y-1">
+                <span className="text-[var(--muted)] text-[11px] block">Возраст</span>
+                <span className="font-semibold flex items-center gap-1.5">
+                  <Hourglass size={13} className="text-amber-500" />
                   {program.min_age} - {program.max_age ? `${program.max_age} лет` : "без ограничений"}
-                </dd>
+                </span>
               </div>
 
               {program.duration_months && (
-                <div>
-                  <dt className="text-gray-500 dark:text-gray-400 mb-1">Длительность</dt>
-                  <dd className="font-semibold">{program.duration_months} мес.</dd>
+                <div className="space-y-1">
+                  <span className="text-[var(--muted)] text-[11px] block">Длительность</span>
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <Calendar size={13} className="text-blue-500" />
+                    {program.duration_months} мес.
+                  </span>
                 </div>
               )}
 
               {program.deadline && (
-                <div>
-                  <dt className="text-gray-500 dark:text-gray-400 mb-1">Дедлайны / Сроки</dt>
-                  <dd className="font-semibold">{program.deadline}</dd>
+                <div className="space-y-1">
+                  <span className="text-[var(--muted)] text-[11px] block">Дедлайны / Сроки</span>
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <Calendar size={13} className="text-rose-500/80" />
+                    {program.deadline}
+                  </span>
                 </div>
               )}
-            </dl>
+            </div>
 
             {program.official_url && (
-              <a 
-                href={program.official_url} 
-                target="_blank" 
-                rel="noreferrer"
-                className="mt-8 flex items-center justify-center gap-2 w-full bg-[#3B82F6] text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-md"
-              >
-                Официальный сайт <OpenInNewIcon fontSize="small" />
-              </a>
+              <div className="pt-2">
+                <a 
+                  href={program.official_url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-1.5 w-full py-3 px-4 rounded-xl bg-[var(--accent)] text-white font-bold text-xs hover:bg-emerald-500 transition-all active:scale-[0.98]"
+                >
+                  Официальный сайт <ExternalLink size={12} />
+                </a>
+              </div>
             )}
           </div>
-        </div>
+        </aside>
 
       </div>
+
     </div>
   );
 }

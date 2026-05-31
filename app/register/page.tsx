@@ -4,43 +4,37 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import api from "../../lib/api";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useAuthStore } from "../../store/authStore";
-import PublicIcon from '@mui/icons-material/Public';
+import { Globe, ArrowRight } from "lucide-react";
 
 const registerSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number"),
-  country: z.string().min(1, "Please select a country"),
+  fullName: z.string().min(2, "Минимум 2 символа"),
+  email: z.string().email("Некорректный email"),
+  country: z.string().min(1, "Выберите страну"),
+  password: z.string()
+    .min(8, "Минимум 8 символов")
+    .regex(/[A-Z]/, "Нужна хотя бы одна заглавная буква")
+    .regex(/[0-9]/, "Нужна хотя бы одна цифра"),
 });
-
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+// ── Inner form (needs useSearchParams inside Suspense) ────────────────────────
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get("next") || "/home";
   const [error, setError] = useState("");
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/home");
-    }
-  }, [isAuthenticated, router]);
+    if (isAuthenticated) router.push(nextUrl);
+  }, [isAuthenticated, router, nextUrl]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-  });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } =
+    useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
 
   const onSubmit = async (data: RegisterFormValues) => {
     setError("");
@@ -49,106 +43,178 @@ export default function RegisterPage() {
         email: data.email,
         password: data.password,
         full_name: data.fullName,
+        country: data.country,
       });
-      router.push("/login?registered=true");
+      // After registration → go to login preserving ?next=
+      const loginHref = nextUrl !== "/home"
+        ? `/login?next=${encodeURIComponent(nextUrl)}&registered=true`
+        : "/login?registered=true";
+      router.push(loginHref);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Registration failed. Please try again.");
+      setError(err.response?.data?.detail || "Ошибка регистрации. Попробуйте снова.");
     }
   };
 
-  return (
-    <div className="flex min-h-screen flex-col bg-[#F8FAFC] dark:bg-[#0F172A] transition-colors duration-300">
-      <header className="w-full p-4 flex justify-between items-center shadow-sm bg-white dark:bg-[#0F172A] border-b-[4px] border-b-gray-200 dark:border-b-gray-800">
-        <Link href="/" className="flex items-center gap-3">
-          <PublicIcon fontSize="large" className="text-blue-500" />
-          <span className="font-bold text-xl text-[#0F172A] dark:text-white">WorldBridge</span>
-        </Link>
-      </header>
+  const loginHref = nextUrl !== "/home"
+    ? `/login?next=${encodeURIComponent(nextUrl)}`
+    : "/login";
 
-      <div className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 transition-colors duration-300">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-              Create your account
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-              Or{" "}
-              <Link href="/login" className="font-medium text-[#3B82F6] hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
-                sign in to your existing account
+  const inputCls = "w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all";
+
+  return (
+    <div className="min-h-[100dvh] grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] bg-[var(--background)]">
+
+      {/* ─── Left brand panel ──────────────────────────────── */}
+      <div className="hidden lg:flex flex-col justify-between p-12 bg-[var(--foreground)] text-[var(--background)] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5"
+          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[var(--accent)] rounded-full blur-[100px] opacity-12 -translate-y-1/2 translate-x-1/2" />
+
+        <div className="relative flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+            <Globe size={16} className="text-white" strokeWidth={2.5} />
+          </div>
+          <span className="font-bold text-lg tracking-tight">WorldBridge</span>
+        </div>
+
+        <div className="relative space-y-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--background)]/40">Присоединяйтесь бесплатно</p>
+          <h2 className="text-4xl font-bold tracking-tighter leading-tight text-balance">
+            Ваш следующий <span className="text-[var(--accent)]">шаг</span> начинается с регистрации.
+          </h2>
+          <p className="text-sm text-[var(--background)]/55 leading-relaxed max-w-[42ch]">
+            Получите доступ к 2,341 программам релокации, AI-консультанту и калькулятору расходов.
+          </p>
+
+          {/* Steps preview */}
+          <div className="pt-6 space-y-4">
+            {[
+              "Зарегистрируйтесь за 30 секунд",
+              "Пройдите AI-консультацию",
+              "Выберите программу и подайте заявку",
+            ].map((step, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full border border-[var(--accent)]/40 flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-[var(--accent)]">{i + 1}</span>
+                </div>
+                <span className="text-sm text-[var(--background)]/60">{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative text-xs text-[var(--background)]/35">
+          Уже более 18,400 человек используют WorldBridge.
+        </div>
+      </div>
+
+      {/* ─── Right form panel ──────────────────────────────── */}
+      <div className="flex flex-col justify-center px-6 md:px-16 xl:px-24 py-16">
+        <div className="lg:hidden flex items-center gap-2 mb-12">
+          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+            <Globe size={13} className="text-white" strokeWidth={2.5} />
+          </div>
+          <span className="font-bold tracking-tight">WorldBridge</span>
+        </div>
+
+        <div className="w-full max-w-[420px]">
+          <div className="mb-8 reveal-up">
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Создать аккаунт</h1>
+
+            {/* Context hint when user came from auth gate */}
+            {nextUrl !== "/home" && (
+              <p className="text-[11px] font-semibold text-[var(--accent)] bg-[var(--accent-dim)] border border-[var(--accent)]/20 px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5">
+                🔒 После регистрации вы попадёте на выбранную программу
+              </p>
+            )}
+
+            <p className="text-sm text-[var(--muted)]">
+              Уже есть аккаунт?{" "}
+              <Link href={loginHref} className="text-[var(--accent)] font-semibold hover:underline">
+                Войти
               </Link>
             </p>
           </div>
-          
+
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm text-center border border-red-200 dark:border-red-800">
+            <div className="mb-6 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/8 text-red-500 text-sm">
               {error}
             </div>
           )}
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                <input
-                  {...register("fullName")}
-                  className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:text-sm transition-colors"
-                  placeholder="John Doe"
-                />
-                {errors.fullName && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.fullName.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
-                <input
-                  {...register("email")}
-                  type="email"
-                  className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:text-sm transition-colors"
-                  placeholder="john@example.com"
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.email.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Country of Residence</label>
-                <select
-                  {...register("country")}
-                  className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:text-sm transition-colors"
-                >
-                  <option value="">Select a country</option>
-                  <option value="TJ">Tajikistan</option>
-                  <option value="UZ">Uzbekistan</option>
-                  <option value="KZ">Kazakhstan</option>
-                  <option value="RU">Russia</option>
-                  <option value="OTHER">Other</option>
-                </select>
-                {errors.country && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.country.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                <input
-                  {...register("password")}
-                  type="password"
-                  className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 shadow-sm focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:text-sm transition-colors"
-                />
-                {errors.password && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.password.message}</p>}
-              </div>
-
-
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="reveal-up delay-75">
+              <label className="block text-sm font-medium mb-2">Полное имя</label>
+              <input {...register("fullName")} placeholder="Камол Рахимов" className={inputCls} />
+              {errors.fullName && <p className="mt-1.5 text-xs text-red-500">{errors.fullName.message}</p>}
             </div>
 
-            <div>
+            <div className="reveal-up delay-100">
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <input {...register("email")} type="email" placeholder="you@example.com" className={inputCls} />
+              {errors.email && <p className="mt-1.5 text-xs text-red-500">{errors.email.message}</p>}
+            </div>
+
+            <div className="reveal-up delay-150">
+              <label className="block text-sm font-medium mb-2">Страна проживания</label>
+              <select {...register("country")} className={`${inputCls} cursor-pointer`}>
+                <option value="">Выберите страну</option>
+                <option value="TJ">Таджикистан</option>
+                <option value="UZ">Узбекистан</option>
+                <option value="KZ">Казахстан</option>
+                <option value="RU">Россия</option>
+                <option value="KG">Кыргызстан</option>
+                <option value="OTHER">Другая</option>
+              </select>
+              {errors.country && <p className="mt-1.5 text-xs text-red-500">{errors.country.message}</p>}
+            </div>
+
+            <div className="reveal-up delay-200">
+              <label className="block text-sm font-medium mb-2">Пароль</label>
+              <input {...register("password")} type="password" placeholder="••••••••" className={inputCls} />
+              {errors.password && <p className="mt-1.5 text-xs text-red-500">{errors.password.message}</p>}
+              <p className="mt-1.5 text-xs text-[var(--muted)]">Мин. 8 символов, одна заглавная, одна цифра</p>
+            </div>
+
+            <div className="reveal-up delay-300 pt-2">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative flex w-full justify-center rounded-md border border-transparent bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 disabled:bg-gray-400 transition-colors shadow-md"
+                className="group w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-semibold text-sm hover:opacity-85 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Creating account..." : "Register"}
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 rounded-full border-2 border-[var(--background)]/30 border-t-[var(--background)] animate-spin" />
+                    Создаём аккаунт...
+                  </span>
+                ) : (
+                  <>
+                    Зарегистрироваться
+                    <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
               </button>
             </div>
           </form>
+
+          <p className="mt-6 text-xs text-center text-[var(--muted)] reveal-up delay-400">
+            Регистрируясь, вы соглашаетесь с нашей политикой конфиденциальности
+          </p>
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Default export wrapped in Suspense (required for useSearchParams) ─────────
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--background)]">
+        <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }

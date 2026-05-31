@@ -1,21 +1,26 @@
 "use client";
 
 import { useAuthStore } from "../../../store/authStore";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, use } from "react";
-import LockIcon from '@mui/icons-material/Lock';
-import PublicIcon from '@mui/icons-material/Public';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useTheme } from "next-themes";
 import api from "../../../lib/api";
-import ProgramCard from "../../../components/ProgramCard";
 import { useLangStore } from "../../../store/langStore";
 import { translations } from "../../../locales/translations";
 import { getLocalizedField } from "../../../utils/langHelper";
+import AuthGateModal from "../../../components/AuthGateModal";
+import { 
+  ArrowLeft, 
+  Globe, 
+  Moon, 
+  Sun, 
+  Sparkles, 
+  Lock, 
+  ChevronDown,
+  ArrowRight,
+  Compass
+} from "lucide-react";
 
 interface Country {
   id: number;
@@ -24,6 +29,7 @@ interface Country {
   name_en: string;
   flag_emoji: string;
   description_ru: string;
+  description_en: string;
 }
 
 interface Program {
@@ -38,8 +44,24 @@ interface Program {
 interface FAQ {
   id: number;
   question: string;
-  answer?: string; // Optional because unauthenticated users don't get the answer
+  answer?: string;
 }
+
+const CATEGORY_STYLE: Record<string, { bg: string, text: string, border: string }> = {
+  STUDIUM:     { bg: "bg-sky-500/10", text: "text-sky-500", border: "border-sky-500/20" },
+  ARBEIT:      { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" },
+  AUSBILDUNG:  { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" },
+  AU_PAIR:     { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" },
+  INTERNSHIP:  { bg: "bg-orange-500/10", text: "text-orange-500", border: "border-orange-500/20" },
+  VOLUNTEERING:{ bg: "bg-teal-500/10", text: "text-teal-500", border: "border-teal-500/20" },
+  IMMIGRATION: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20" },
+};
+
+const LEVEL_LABELS: Record<string, string> = {
+  BEGINNER: "Новичок",
+  INTERMEDIATE: "Средний",
+  ADVANCED: "Продвинутый",
+};
 
 export default function CountryPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -57,13 +79,20 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [authGate, setAuthGate] = useState<{ open: boolean; target: string }>({ open: false, target: "" });
+
+  const handleProgramClick = (programSlug: string) => {
+    if (isAuthenticated) {
+      router.push(`/programs/${programSlug}`);
+    } else {
+      setAuthGate({ open: true, target: `/programs/${programSlug}` });
+    }
+  };
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    // Only fetch once auth status is known (authLoading is false)
     if (authLoading) return;
 
     const fetchData = async () => {
@@ -75,8 +104,8 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
           api.get(`/countries/${countryId}/faq`),
         ]);
         setCountry(countryRes.data);
-        setPrograms(programsRes.data.items);
-        setFaqs(faqRes.data);
+        setPrograms(programsRes.data.items || []);
+        setFaqs(faqRes.data || []);
       } catch (error) {
         console.error("Error fetching country data:", error);
       } finally {
@@ -85,135 +114,244 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
     };
 
     fetchData();
-  }, [countryId, authLoading, isAuthenticated]); // Refetch if auth changes so FAQs update
+  }, [countryId, authLoading, isAuthenticated]);
 
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] dark:bg-[#0F172A]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 dark:border-white/20 border-t-[#3B82F6]"></div>
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--background)]">
+        <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
       </div>
     );
   }
 
   if (!country) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-center p-6 bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-white">
-        <div>
-          <h1 className="text-4xl font-bold mb-4">{text.notFound || "Страна не найдена"}</h1>
-          <Link href="/home" className="text-[#3B82F6] hover:underline">{navText.home}</Link>
+      <div className="min-h-[100dvh] flex items-center justify-center text-center p-6 bg-[var(--background)] text-[var(--foreground)]">
+        <div className="max-w-md space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight">
+            {translations[lang]?.countries?.notFound || "Страна не найдена"}
+          </h1>
+          <Link href="/home" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] hover:underline">
+            <ArrowLeft size={14} /> {navText.home}
+          </Link>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-white font-sans transition-colors duration-300">
-      
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/60 dark:bg-[#0F172A]/60 backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.05] transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/home" className="flex items-center gap-2 text-gray-500 hover:text-[#3B82F6] transition-colors font-medium">
-              <ArrowBackIcon fontSize="small" /> {navText.back}
-            </Link>
-            <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div>
-            <Link href="/" className="hidden sm:flex items-center gap-3 group">
-              <div className="bg-[#0F172A] dark:bg-white/10 p-1 rounded-md text-white border border-transparent dark:border-white/10 group-hover:bg-[#3B82F6] transition-all shadow-sm">
-                <PublicIcon fontSize="small" />
-              </div>
-              <span className="text-lg font-bold text-[#0F172A] dark:text-white">WorldBridge</span>
-            </Link>
-          </div>
+  const countryName = getLocalizedField(country, 'name', lang);
+  const countryDesc = getLocalizedField(country, 'description', lang);
 
-          <div className="flex items-center space-x-4">
-            {mounted && (
-              <button 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-300"
-              >
-                {theme === "dark" ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
-              </button>
-            )}
-            {!isAuthenticated && (
-              <Link href="/register" className="bg-[#3B82F6] text-white px-4 py-1.5 rounded-full hover:bg-blue-600 transition-colors shadow-md text-sm font-medium">
-                {navText.signup}
-              </Link>
-            )}
-          </div>
+  return (
+    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] flex flex-col font-sans">
+      
+      {/* ─── Navbar ─────────────────────────────────────────────── */}
+      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
+        <div className="flex items-center gap-4">
+          <Link href="/home" className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+            <ArrowLeft size={14} /> {navText.back}
+          </Link>
+          <div className="h-4 w-px bg-[var(--border)] hidden sm:block"></div>
+          <Link href="/" className="hidden sm:flex items-center gap-2 group">
+            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
+              <Globe size={13} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
+          </Link>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {mounted && (
+            <button 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+          )}
+          {!isAuthenticated && (
+            <Link href="/register" className="px-3 py-1.5 rounded-lg bg-[var(--foreground)] text-[var(--background)] text-[13px] font-semibold hover:opacity-85 transition-all">
+              {navText.signup}
+            </Link>
+          )}
         </div>
       </nav>
 
-      {/* Header */}
-      <div className="pt-32 pb-16 px-6 max-w-4xl mx-auto text-center">
-        <div className="inline-block p-4 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 shadow-sm mb-6 text-6xl">
-          {country.flag_emoji}
+      {/* ─── Header Section — matching home's premium accent style ──── */}
+      <div className="pt-24 pb-12 px-5 md:px-8">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
+          {/* Circular Glass Bezel for flag */}
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full glass border border-[var(--border)] text-5xl shadow-xl select-none animate-float">
+            {country.flag_emoji}
+          </div>
+          
+          <div className="space-y-3">
+            <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)]">
+              {programs.length} {text.programs}
+            </p>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-balance">
+              {countryName}
+            </h1>
+            <p className="text-base text-[var(--muted)] leading-relaxed max-w-[62ch] mx-auto font-light">
+              {countryDesc}
+            </p>
+          </div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-          <span className="text-[#3B82F6]">{getLocalizedField(country, 'name', lang)}</span>
-        </h1>
-        <p className="text-lg text-gray-500 dark:text-gray-400">
-          {getLocalizedField(country, 'description', lang)}
-        </p>
       </div>
 
-      {/* Programs Section */}
-      <section className="max-w-6xl mx-auto px-6 mb-24">
-        <h2 className="text-2xl font-bold mb-8">{text.programs}</h2>
-        {programs.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {programs.map(program => (
-              <ProgramCard key={program.id} program={program} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 italic">{text.noPrograms}</p>
-        )}
-      </section>
-
-      {/* FAQ Section */}
-      <main className="max-w-4xl mx-auto px-6 pb-24 space-y-6">
-        <h2 className="text-2xl font-bold mb-8">{text.faqTitle}</h2>
+      {/* ─── Main Content — split asymmetric layout ────────────────── */}
+      <div className="max-w-7xl mx-auto px-5 md:px-8 pb-24 w-full grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 xl:gap-20 items-start">
         
-        {faqs.map((item, index) => (
-          <div key={index} className="bg-white dark:bg-[#1E293B]/50 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-white/5 transition-colors">
-            <h3 className="text-xl font-bold text-[#0F172A] dark:text-white mb-4 leading-snug">
-              {item.question}
-            </h3>
-            
-            <div className="text-gray-600 dark:text-gray-300 whitespace-pre-line leading-relaxed text-sm sm:text-base">
-              {item.answer}
+        {/* Left Column: Programs (Non-boring layout) */}
+        <section className="space-y-8">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight mb-1.5">{text.programs}</h2>
+            <p className="text-xs text-[var(--muted)]">Выберите подходящий для вас способ легализации</p>
+          </div>
+
+          {programs.length > 0 ? (
+            <div className="border-t border-[var(--border)]">
+              {programs.map((program) => {
+                const style = CATEGORY_STYLE[program.category] || { bg: "bg-[var(--border)]", text: "text-[var(--muted)]", border: "border-[var(--border)]" };
+                return (
+                  <button
+                    key={program.id}
+                    onClick={() => handleProgramClick(program.slug)}
+                    className="group w-full text-left flex items-start justify-between gap-6 border-b border-[var(--border)] py-6 hover:bg-[var(--card)] -mx-5 px-5 transition-all duration-200"
+                  >
+                    <div className="flex-1 min-w-0 space-y-3">
+                      {/* Tags */}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${style.bg} ${style.text} ${style.border}`}>
+                          {program.category}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted)]">
+                          {LEVEL_LABELS[program.level] || program.level}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-base md:text-lg font-semibold tracking-tight group-hover:text-[var(--accent)] transition-colors line-clamp-1">
+                        {program.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-[var(--muted)] leading-relaxed line-clamp-2 max-w-[55ch]">
+                        {program.short_description}
+                      </p>
+                    </div>
+
+                    {/* Arrow */}
+                    <div className="shrink-0 w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all mt-1">
+                      <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-10 text-center border border-dashed border-[var(--border)] rounded-2xl">
+              <Compass size={24} className="mx-auto text-[var(--muted)] mb-3 animate-spin-slow" />
+              <p className="text-sm text-[var(--muted)] italic">{text.noPrograms}</p>
+            </div>
+          )}
+        </section>
+
+        {/* Right Column: FAQ & AI Guidance (Modern refitted look) */}
+        <section className="space-y-12">
+          
+          {/* FAQ Segment (Disclosure block) */}
+          {faqs.length > 0 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight mb-1.5">{text.faqTitle}</h2>
+                <p className="text-xs text-[var(--muted)]">Ответы на самые популярные вопросы</p>
+              </div>
+
+              <div className="space-y-2.5">
+                {faqs.map((faq, index) => {
+                  const isOpen = openFaqIndex === index;
+                  return (
+                    <div 
+                      key={faq.id} 
+                      className="border border-[var(--border)] rounded-2xl bg-[var(--card)] overflow-hidden transition-all duration-300"
+                    >
+                      <button
+                        onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-sm hover:text-[var(--accent)] transition-colors"
+                      >
+                        <span className="line-clamp-2">{faq.question}</span>
+                        <div className={`shrink-0 text-[var(--muted)] transition-transform duration-300 ${isOpen ? "rotate-180 text-[var(--accent)]" : ""}`}>
+                          <ChevronDown size={15} />
+                        </div>
+                      </button>
+                      
+                      <div className={`transition-all duration-300 ease-in-out ${isOpen ? "max-h-[300px] border-t border-[var(--border)]" : "max-h-0"} overflow-hidden`}>
+                        <div className="px-5 py-4 text-xs sm:text-sm text-[var(--muted)] leading-relaxed whitespace-pre-line bg-[var(--background)]/30">
+                          {faq.answer || "Войдите для просмотра ответа на данный вопрос."}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* AI Banner — premium matching style */}
+          <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-xl">
+            {/* Ambient gradients */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--accent)] rounded-full blur-[80px] opacity-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500 rounded-full blur-[80px] opacity-10 pointer-events-none" />
+
+            <div className="relative z-10 space-y-6">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-dim)] border border-[var(--accent)]/20 text-[var(--accent)] text-[11px] font-semibold">
+                <Sparkles size={11} className="animate-pulse-dot" />
+                AI Consultant
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold tracking-tight text-balance">
+                  {text.aiTitle}
+                </h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed max-w-[45ch]">
+                  {text.aiSubtitle}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                {isAuthenticated ? (
+                  <Link 
+                    href="/ai-consultant" 
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white font-semibold text-xs hover:bg-emerald-500 transition-all active:scale-[0.98]"
+                  >
+                    <Sparkles size={12} />
+                    {text.aiBtnAuth}
+                  </Link>
+                ) : (
+                  <Link 
+                    href="/register" 
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border)] text-[var(--foreground)] font-semibold text-xs hover:border-[var(--accent)]/40 hover:bg-[var(--accent-dim)] transition-all active:scale-[0.98]"
+                  >
+                    <Lock size={12} />
+                    {text.aiBtnGuest}
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        ))}
 
-        {/* AI Consultant Banner */}
-        <div className="bg-gradient-to-br from-[#0F172A] to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 sm:p-12 shadow-2xl border border-white/10 text-center relative overflow-hidden mt-12">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#3B82F6] rounded-full blur-[100px] opacity-20 -mr-10 -mt-10 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full blur-[100px] opacity-20 -ml-10 -mb-10 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-              {text.aiTitle}
-            </h3>
-            <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-              {text.aiSubtitle}
-            </p>
-            
-            {isAuthenticated ? (
-              <Link href="/ai-consultant" className="inline-flex items-center justify-center gap-2 mx-auto bg-white text-[#0F172A] font-bold py-4 px-8 rounded-full hover:scale-105 hover:bg-gray-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                <AutoAwesomeIcon className="text-[#3B82F6]" />
-                {text.aiBtnAuth}
-              </Link>
-            ) : (
-              <Link href="/register" className="inline-flex items-center justify-center gap-2 mx-auto bg-[#3B82F6] text-white font-bold py-4 px-8 rounded-full hover:scale-105 hover:bg-blue-600 transition-all shadow-lg">
-                <LockIcon fontSize="small" />
-                {text.aiBtnGuest}
-              </Link>
-            )}
-          </div>
-        </div>
+        </section>
 
-      </main>
+      </div>
+
+      {/* Auth Gate Modal */}
+      <AuthGateModal
+        isOpen={authGate.open}
+        onClose={() => setAuthGate({ open: false, target: "" })}
+        redirectTo={authGate.target}
+      />
+
     </div>
   );
 }

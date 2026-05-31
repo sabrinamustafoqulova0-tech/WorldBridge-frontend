@@ -4,15 +4,21 @@ import { useAuthStore } from "../../store/authStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PublicIcon from '@mui/icons-material/Public';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CircularProgress from '@mui/material/CircularProgress';
 import { useTheme } from "next-themes";
 import api from "../../lib/api";
+import {
+  ArrowLeft,
+  Globe,
+  Sparkles,
+  Moon,
+  Sun,
+  CheckCircle2,
+  ArrowRight,
+  Loader2,
+  BrainCircuit,
+  Trophy,
+  MapPin,
+} from "lucide-react";
 
 interface AIRequest {
   age: number;
@@ -40,6 +46,9 @@ interface AIResponse {
   summary: string;
 }
 
+const inputCls =
+  "w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all";
+
 export default function AIConsultantPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -60,9 +69,7 @@ export default function AIConsultantPage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<AIResponse | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -74,7 +81,7 @@ export default function AIConsultantPage() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "age" || name === "work_experience" ? Number(value) : value
+      [name]: name === "age" || name === "work_experience" ? Number(value) : value,
     }));
   };
 
@@ -83,99 +90,112 @@ export default function AIConsultantPage() {
     setLoading(true);
     setError("");
     setResult(null);
-
     try {
       const payload = { ...formData };
-      if (payload.desired_country === "any") {
-        delete (payload as any).desired_country;
-      }
-      
+      if (payload.desired_country === "any") delete (payload as any).desired_country;
       const res = await api.post("/ai/recommend", payload);
       setResult(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Ошибка при получении рекомендаций. Проверьте данные и попробуйте снова.");
+      setError(err.response?.data?.detail || "Ошибка при получении рекомендаций. Попробуйте снова.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (authLoading) return null;
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--background)]">
+        <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-white font-sans transition-colors duration-300 pb-20">
-      
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/60 dark:bg-[#0F172A]/60 backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.05] transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 hover:text-[#3B82F6] transition-colors font-medium">
-              <ArrowBackIcon fontSize="small" /> Назад
-            </button>
-            <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div>
-            <Link href="/" className="hidden sm:flex items-center gap-3 group">
-              <div className="bg-[#0F172A] dark:bg-white/10 p-1 rounded-md text-white border border-transparent dark:border-white/10 group-hover:bg-[#3B82F6] transition-all shadow-sm">
-                <PublicIcon fontSize="small" />
-              </div>
-              <span className="text-lg font-bold text-[#0F172A] dark:text-white">WorldBridge</span>
-            </Link>
-          </div>
+    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
 
-          <div className="flex items-center space-x-4">
-            {mounted && (
-              <button 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-300"
-              >
-                {theme === "dark" ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
-              </button>
-            )}
-          </div>
+      {/* ─── Navbar ─────────────────────────────────────────────── */}
+      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+          >
+            <ArrowLeft size={14} /> Назад
+          </button>
+          <div className="h-4 w-px bg-[var(--border)] hidden sm:block" />
+          <Link href="/" className="hidden sm:flex items-center gap-2 group">
+            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
+              <Globe size={13} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
+          </Link>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+          )}
         </div>
       </nav>
 
-      {/* Header */}
-      <div className="pt-32 pb-12 px-6 max-w-3xl mx-auto text-center">
-        <div className="inline-block p-4 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-600 dark:text-blue-400 mb-6 shadow-inner">
-          <AutoAwesomeIcon style={{ fontSize: 48 }} />
+      {/* ─── Hero Header — LEFT-ALIGNED ────────────────────────── */}
+      <div className="pt-24 pb-8 px-5 md:px-8">
+        <div className="max-w-6xl mx-auto space-y-3">
+          <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
+            <BrainCircuit size={12} />
+            Персональный AI-анализ
+          </p>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter leading-tight">
+            AI Консультант
+          </h1>
+          <p className="text-sm md:text-base text-[var(--muted)] leading-relaxed max-w-[55ch]">
+            Умный алгоритм подберёт лучшие страны и программы для релокации на основе ваших данных.
+          </p>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
-          AI Консультант
-        </h1>
-        <p className="text-lg text-gray-500 dark:text-gray-400">
-          Умный алгоритм подберёт лучшие страны и программы для релокации на основе ваших данных.
-        </p>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
-        
-        {/* Form Section */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-3xl p-8 shadow-xl border border-gray-100 dark:border-white/5 h-fit">
-          <h2 className="text-2xl font-bold mb-6 border-b border-gray-100 dark:border-white/10 pb-4">Заполните профиль</h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Возраст</label>
-                <input 
-                  type="number" name="age" value={formData.age} onChange={handleChange} min={16} max={70} required
-                  className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+      {/* ─── Main Grid ────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-5 md:px-8 w-full mt-4 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 items-start flex-1">
+
+        {/* ── Form Panel ───────────────────────────────────────── */}
+        <div className="glass border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm h-fit">
+          <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-[var(--border)]">
+            <div className="w-8 h-8 rounded-xl bg-[var(--accent-dim)] border border-[var(--accent)]/20 flex items-center justify-center">
+              <Sparkles size={14} className="text-[var(--accent)]" />
+            </div>
+            <h2 className="font-bold text-sm tracking-tight">Заполните профиль</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Age & Experience */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-[var(--muted)]">Возраст</label>
+                <input
+                  type="number" name="age" value={formData.age}
+                  onChange={handleChange} min={16} max={70} required
+                  className={inputCls}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Опыт работы (лет)</label>
-                <input 
-                  type="number" name="work_experience" value={formData.work_experience} onChange={handleChange} min={0} max={50} required
-                  className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-[var(--muted)]">Опыт работы (лет)</label>
+                <input
+                  type="number" name="work_experience" value={formData.work_experience}
+                  onChange={handleChange} min={0} max={50} required
+                  className={inputCls}
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Образование</label>
-              <select 
-                name="education" value={formData.education} onChange={handleChange}
-                className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              >
+            {/* Education */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-[var(--muted)]">Образование</label>
+              <select name="education" value={formData.education} onChange={handleChange} className={inputCls}>
                 <option value="school">Школа (11 классов)</option>
                 <option value="college">Колледж / Техникум</option>
                 <option value="bachelor">Бакалавриат (или студент)</option>
@@ -184,57 +204,48 @@ export default function AIConsultantPage() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Английский</label>
-                <select 
-                  name="english_level" value={formData.english_level} onChange={handleChange}
-                  className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                >
+            {/* Languages */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-[var(--muted)]">Английский</label>
+                <select name="english_level" value={formData.english_level} onChange={handleChange} className={inputCls}>
                   <option value="none">Нет (А0)</option>
-                  <option value="a1">A1 (Начальный)</option>
-                  <option value="a2">A2 (Базовый)</option>
-                  <option value="b1">B1 (Средний)</option>
-                  <option value="b2">B2 (Выше среднего)</option>
-                  <option value="c1">C1 (Продвинутый)</option>
-                  <option value="c2">C2 (Свободный)</option>
+                  <option value="a1">A1 — Начальный</option>
+                  <option value="a2">A2 — Базовый</option>
+                  <option value="b1">B1 — Средний</option>
+                  <option value="b2">B2 — Выше среднего</option>
+                  <option value="c1">C1 — Продвинутый</option>
+                  <option value="c2">C2 — Свободный</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Немецкий</label>
-                <select 
-                  name="german_level" value={formData.german_level} onChange={handleChange}
-                  className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                >
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-[var(--muted)]">Немецкий</label>
+                <select name="german_level" value={formData.german_level} onChange={handleChange} className={inputCls}>
                   <option value="none">Нет (А0)</option>
-                  <option value="a1">A1 (Начальный)</option>
-                  <option value="a2">A2 (Базовый)</option>
-                  <option value="b1">B1 (Средний)</option>
-                  <option value="b2">B2 (Выше среднего)</option>
-                  <option value="c1">C1 (Продвинутый)</option>
+                  <option value="a1">A1 — Начальный</option>
+                  <option value="a2">A2 — Базовый</option>
+                  <option value="b1">B1 — Средний</option>
+                  <option value="b2">B2 — Выше среднего</option>
+                  <option value="c1">C1 — Продвинутый</option>
                 </select>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Стартовый бюджет</label>
-              <select 
-                name="budget" value={formData.budget} onChange={handleChange}
-                className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              >
-                <option value="low">Низкий (менее 1000€)</option>
-                <option value="medium">Средний (1000 - 3000€)</option>
-                <option value="high">Высокий (более 3000€)</option>
+            {/* Budget */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-[var(--muted)]">Стартовый бюджет</label>
+              <select name="budget" value={formData.budget} onChange={handleChange} className={inputCls}>
+                <option value="low">Низкий (менее 1 000€)</option>
+                <option value="medium">Средний (1 000 – 3 000€)</option>
+                <option value="high">Высокий (более 3 000€)</option>
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Желаемая страна (опционально)</label>
-              <select 
-                name="desired_country" value={formData.desired_country} onChange={handleChange}
-                className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              >
-                <option value="any">Любая страна (Доверьтесь AI)</option>
+            {/* Desired Country */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-[var(--muted)]">Желаемая страна (опционально)</label>
+              <select name="desired_country" value={formData.desired_country} onChange={handleChange} className={inputCls}>
+                <option value="any">Любая страна — доверьтесь AI</option>
                 <option value="de">🇩🇪 Германия</option>
                 <option value="fr">🇫🇷 Франция</option>
                 <option value="ch">🇨🇭 Швейцария</option>
@@ -243,94 +254,127 @@ export default function AIConsultantPage() {
                 <option value="us">🇺🇸 США</option>
                 <option value="cn">🇨🇳 Китай</option>
                 <option value="tr">🇹🇷 Турция</option>
-                {/* Add others if needed */}
               </select>
             </div>
 
+            {/* Error */}
             {error && (
-              <div className="bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 p-4 rounded-xl text-sm mt-4">
+              <div className="px-4 py-3 rounded-xl border border-rose-500/20 bg-rose-500/8 text-rose-500 text-xs">
                 {error}
               </div>
             )}
 
-            <button 
-              type="submit" 
+            {/* Submit */}
+            <button
+              type="submit"
               disabled={loading}
-              className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="group w-full mt-2 flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-[var(--accent)]/20"
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : <><AutoAwesomeIcon /> Анализировать профиль</>}
+              {loading ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Анализируем...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={15} />
+                  Анализировать профиль
+                </>
+              )}
             </button>
           </form>
         </div>
 
-        {/* Results Section */}
+        {/* ── Results Panel ─────────────────────────────────────── */}
         <div>
           {result ? (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-              
-              {/* Overall Score */}
-              <div className="bg-gradient-to-br from-[#0F172A] to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-8 shadow-2xl border border-white/10 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-green-500 rounded-full blur-[80px] opacity-20 -mr-10 -mt-10 pointer-events-none"></div>
-                <h3 className="text-xl font-bold text-white mb-2">Шанс успеха</h3>
-                <div className="flex items-end gap-4 mb-4">
-                  <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-                    {result.success_chance}%
-                  </span>
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+              {/* Success Score Card */}
+              <div className="relative overflow-hidden glass border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 pointer-events-none" />
+                <div className="relative space-y-3">
+                  <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[var(--accent)]">
+                    <Trophy size={12} />
+                    Шанс успешной релокации
+                  </div>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-5xl font-black text-[var(--accent)]">
+                      {result.success_chance}%
+                    </span>
+                    <div className="flex-1 h-2 bg-[var(--border)] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[var(--accent)] rounded-full transition-all duration-1000"
+                        style={{ width: `${result.success_chance}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed">{result.summary}</p>
                 </div>
-                <p className="text-gray-300 leading-relaxed">
-                  {result.summary}
-                </p>
               </div>
 
-              {/* Recommendations */}
-              <div>
-                <h3 className="text-2xl font-bold mb-4">Рекомендуемые страны</h3>
-                <div className="space-y-4">
-                  {result.recommended_countries.map((country, idx) => (
-                    <Link href={`/countries/${country.slug}`} key={country.slug}>
-                      <div className="bg-white dark:bg-[#1E293B]/70 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-white/5 group cursor-pointer block mb-4 relative overflow-hidden">
-                        
-                        {/* Score Indicator */}
-                        <div className="absolute top-0 right-0 h-full w-2 bg-gradient-to-b from-blue-400 to-purple-500"></div>
+              {/* Country Recommendations */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] flex items-center gap-1.5">
+                  <MapPin size={11} /> Рекомендуемые направления
+                </h3>
 
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-3xl">{country.flag}</span>
-                            <h4 className="text-xl font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                              {country.name}
-                            </h4>
+                {result.recommended_countries.map((country, idx) => (
+                  <Link href={`/countries/${country.slug}`} key={country.slug}>
+                    <div className="group glass border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent)]/30 hover:bg-[var(--card)] transition-all duration-200 relative overflow-hidden cursor-pointer">
+                      {/* Rank stripe */}
+                      <div
+                        className="absolute left-0 top-0 h-full w-1 rounded-l-2xl"
+                        style={{ background: idx === 0 ? "var(--accent)" : "var(--border)" }}
+                      />
+
+                      <div className="pl-3 flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-2xl">{country.flag}</span>
+                            <div>
+                              <h4 className="font-bold text-sm group-hover:text-[var(--accent)] transition-colors">
+                                {country.name}
+                              </h4>
+                              <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent-dim)] px-2 py-0.5 rounded-full">
+                                {country.match_score}% совпадение
+                              </span>
+                            </div>
                           </div>
-                          <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full font-bold text-sm">
-                            {country.match_score}% Совпадение
-                          </div>
+
+                          <p className="text-xs text-[var(--muted)] leading-relaxed line-clamp-2">
+                            {country.reason}
+                          </p>
+
+                          {country.top_programs.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {country.top_programs.map((prog, i) => (
+                                <span key={i} className="text-[10px] font-semibold bg-[var(--card)] border border-[var(--border)] text-[var(--muted)] px-2 py-0.5 rounded-md">
+                                  {prog}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                          {country.reason}
-                        </p>
 
-                        <div className="flex flex-wrap gap-2">
-                          {country.top_programs.map((prog, i) => (
-                            <span key={i} className="text-xs bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md">
-                              {prog}
-                            </span>
-                          ))}
+                        <div className="shrink-0 w-7 h-7 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all mt-0.5">
+                          <ArrowRight size={13} />
                         </div>
                       </div>
-                    </Link>
-                  ))}
-                </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
 
               {/* Next Steps */}
-              <div className="bg-white dark:bg-[#1E293B]/70 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-white/5">
-                <h3 className="text-xl font-bold mb-4 border-b border-gray-100 dark:border-white/10 pb-3">
+              <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
                   Ваши следующие шаги
                 </h3>
                 <ul className="space-y-3">
                   {result.next_steps.map((step, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
-                      <CheckCircleIcon fontSize="small" className="text-green-500 mt-0.5 shrink-0" />
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-[var(--muted)] leading-relaxed">
+                      <CheckCircle2 size={13} className="text-[var(--accent)] shrink-0 mt-0.5" />
                       <span>{step}</span>
                     </li>
                   ))}
@@ -339,12 +383,17 @@ export default function AIConsultantPage() {
 
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-3xl">
-              <AutoAwesomeIcon style={{ fontSize: 64 }} className="text-gray-300 dark:text-slate-700 mb-4" />
-              <h3 className="text-xl font-bold text-gray-400 dark:text-slate-500 mb-2">Ожидание данных</h3>
-              <p className="text-gray-400 dark:text-slate-600 text-sm">
-                Заполните форму слева и нажмите "Анализировать профиль", чтобы получить персональные рекомендации.
-              </p>
+            /* Empty state */
+            <div className="h-full min-h-[320px] flex flex-col items-center justify-center text-center p-10 border-2 border-dashed border-[var(--border)] rounded-3xl space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--accent-dim)] border border-[var(--accent)]/20 flex items-center justify-center">
+                <BrainCircuit size={28} className="text-[var(--accent)] opacity-60" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm">Ожидание данных</h3>
+                <p className="text-xs text-[var(--muted)] max-w-[32ch] leading-relaxed">
+                  Заполните форму и нажмите «Анализировать профиль», чтобы получить персональные рекомендации.
+                </p>
+              </div>
             </div>
           )}
         </div>
