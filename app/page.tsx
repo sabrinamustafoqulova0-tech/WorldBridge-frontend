@@ -6,7 +6,22 @@ import { useAuthStore } from "../store/authStore";
 import { useTheme } from "next-themes";
 import { useLangStore } from "../store/langStore";
 import { translations } from "../locales/translations";
-import { ArrowRight, Globe, Moon, Sun, Languages, MapPin, TrendingUp, Shield, Zap } from "lucide-react";
+import api from "../lib/api";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { 
+  ArrowRight,
+  Globe,
+  MapPin,
+  TrendingUp,
+  Shield,
+  Zap,
+  Sparkles,
+  ChevronRight,
+  GraduationCap,
+  Briefcase,
+  Languages,
+  CheckCircle
+} from "lucide-react";
 
 const DESTINATIONS = [
   "Berlin", "Munich", "Paris", "Warsaw", "Zurich", "Vienna",
@@ -44,6 +59,51 @@ const GLOBE_LINES = [
   ["65%,42%", "80%,35%"],
   ["80%,35%", "60%,22%"],
   ["20%,62%", "38%,55%"],
+];
+
+const POPULAR_COUNTRIES = [
+  {
+    id: "de",
+    name: "Германия",
+    flag: "🇩🇪",
+    image: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=600&q=80",
+    programs: "Ausbildung, Студенты, Blue Card",
+    description: "Первоклассное бесплатное образование и надежная социальная система.",
+  },
+  {
+    id: "ca",
+    name: "Канада",
+    flag: "🇨🇦",
+    image: "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=600&q=80",
+    programs: "Express Entry, Студенты",
+    description: "Лояльные иммиграционные программы и высокий уровень жизни.",
+  },
+  {
+    id: "fr",
+    name: "Франция",
+    flag: "🇫🇷",
+    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80",
+    programs: "Паспорт-талант, Студенты",
+    description: "Идеально для деятелей культуры, науки и стартап-предпринимателей.",
+  },
+  {
+    id: "ch",
+    name: "Швейцария",
+    flag: "🇨🇭",
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80",
+    programs: "Работа, Бизнес, Обучение",
+    description: "Премиальное качество жизни, стабильная валюта и надежность.",
+  },
+];
+
+const HERO_SLIDES = [
+  "https://franco.crimealib.ru/wp-content/uploads/2024/04/puteshestviya-1.jpg",
+  "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=900&q=80",
 ];
 
 function GlobeViz() {
@@ -99,11 +159,46 @@ function GlobeViz() {
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuthStore();
-  const { lang, setLang } = useLangStore();
-  const { theme, setTheme } = useTheme();
+  const { lang } = useLangStore();
   const [mounted, setMounted] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [dbStats, setDbStats] = useState({ countries: 47, programs: 2341 });
+
+  const { scrollY } = useScroll();
+  
+  // Parallax properties for the background grid and light spots
+  const bgY = useTransform(scrollY, [0, 800], [0, 200]);
+  const bgOpacity = useTransform(scrollY, [0, 800], [0.15, 0.05]);
+  const spotY = useTransform(scrollY, [0, 800], [0, -100]);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Fetch real database counts dynamically on mount
+  useEffect(() => {
+    api.get("/countries")
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setDbStats((prev) => ({ ...prev, countries: res.data.length }));
+        }
+      })
+      .catch(() => {});
+
+    api.get("/programs")
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setDbStats((prev) => ({ ...prev, programs: res.data.length }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Auto-cycle hero slides
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const text = translations[lang]?.landing || translations.ru.landing;
   const navText = translations[lang]?.nav || translations.ru.nav;
@@ -116,190 +211,371 @@ export default function LandingPage() {
     );
   }
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 40, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-[var(--background)] text-[var(--foreground)]">
+    <div className="min-h-[100dvh] flex flex-col bg-[var(--background)] text-[var(--foreground)] overflow-hidden relative">
+      
+      {/* ─── Parallax Background Elements ───────────────────────── */}
+      {mounted && (
+        <>
+          {/* Subtle Grid Backdrop */}
+          <motion.div 
+            style={{ 
+              y: bgY,
+              opacity: bgOpacity,
+              backgroundImage: "radial-gradient(circle at 1px 1px, var(--accent) 1px, transparent 0)"
+            }}
+            className="absolute inset-0 bg-[size:32px_32px] pointer-events-none z-0"
+          />
+          {/* Ambient Lighting Spots */}
+          <motion.div
+            style={{ y: spotY }}
+            className="absolute top-[-10%] left-[5%] w-[40dvw] h-[40dvw] bg-[var(--accent)] rounded-full blur-[140px] opacity-10 pointer-events-none z-0"
+          />
+          <motion.div
+            style={{ y: bgY }}
+            className="absolute bottom-[20%] right-[-10%] w-[35dvw] h-[35dvw] bg-emerald-500 rounded-full blur-[160px] opacity-[0.07] pointer-events-none z-0"
+          />
+        </>
+      )}
 
-      {/* ─── Navbar ─────────────────────────────────────────────── */}
-      <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-10 h-16 glass dark:glass border-b border-[var(--border)]">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-            <Globe size={14} className="text-white" strokeWidth={2.5} />
-          </div>
-          <span className="font-bold text-[15px] tracking-tight">WorldBridge</span>
-        </Link>
+      {/* ─── Hero Section ────────────────────────────────────────── */}
+      <section className="flex-1 flex items-center pt-16 min-h-[100dvh] relative z-10">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 xl:gap-20 items-center py-24">
 
-        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-[var(--muted)]">
-          <Link href="/home" className="hover:text-[var(--foreground)] transition-colors">{navText.home}</Link>
-          <Link href="/countries" className="hover:text-[var(--foreground)] transition-colors">{navText.destinations}</Link>
-          <Link href="/programs" className="hover:text-[var(--foreground)] transition-colors">{navText.programs}</Link>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          {mounted && (
-            <select
-              value={lang}
-              onChange={(e) => setLang(e.target.value as any)}
-              className="bg-transparent text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] focus:outline-none cursor-pointer transition-colors appearance-none"
-            >
-              <option value="ru">RU</option>
-              <option value="en">EN</option>
-              <option value="tg">TG</option>
-            </select>
-          )}
-
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-            >
-              {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-            </button>
-          )}
-
-          {isAuthenticated ? (
-            <Link href="/home"
-              className="px-4 py-1.5 rounded-lg bg-[var(--accent)] text-white text-sm font-semibold hover:bg-emerald-500 transition-all active:scale-95">
-              Dashboard
-            </Link>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link href="/login"
-                className="px-4 py-1.5 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
-                {navText.login}
-              </Link>
-              <Link href="/register"
-                className="px-4 py-1.5 rounded-lg bg-[var(--foreground)] text-[var(--background)] text-sm font-semibold hover:opacity-85 transition-all active:scale-95">
-                {navText.signup}
-              </Link>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* ─── Hero ────────────────────────────────────────────────── */}
-      <section className="flex-1 flex items-center pt-16 min-h-[100dvh]">
-        <div className="max-w-7xl mx-auto px-6 md:px-10 w-full grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 xl:gap-20 items-center py-24">
-
-          {/* Left: Copy */}
-          <div className="space-y-8">
-            {/* Eyebrow */}
-            <div className="reveal-up flex items-center gap-2">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-semibold tracking-widest uppercase">
+          {/* Left Column: Content */}
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-8"
+          >
+            {/* Eyebrow badge */}
+            <motion.div variants={itemVariants} className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-semibold tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse-dot" />
-                47 стран — 2,341 программа
+                {dbStats.countries} стран — {dbStats.programs} программ
               </span>
-            </div>
+            </motion.div>
 
-            {/* H1 — left aligned, NOT centered */}
-            <h1 className="reveal-up delay-100 text-5xl md:text-6xl xl:text-7xl font-bold tracking-tighter leading-[1.02] text-balance">
+            {/* H1 Heading - Custom Slide Up */}
+            <motion.h1 
+              variants={itemVariants}
+              className="text-5xl md:text-6xl xl:text-7xl font-bold tracking-tighter leading-[1.02] text-balance text-[var(--foreground)]"
+            >
               {text.title}
-            </h1>
+            </motion.h1>
 
-            <p className="reveal-up delay-200 text-base md:text-lg text-[var(--muted)] leading-relaxed max-w-[52ch] font-light">
+            {/* Subtitle */}
+            <motion.p 
+              variants={itemVariants}
+              className="text-base md:text-lg text-[var(--muted)] leading-relaxed max-w-[52ch] font-light"
+            >
               {text.subtitle}
-            </p>
+            </motion.p>
 
-            {/* CTA row */}
-            <div className="reveal-up delay-300 flex flex-wrap items-center gap-4">
+            {/* CTA action buttons */}
+            <motion.div 
+              variants={itemVariants}
+              className="flex flex-wrap items-center gap-4 pt-2"
+            >
               <Link href={isAuthenticated ? "/home" : "/register"}
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-sm hover:bg-emerald-500 transition-all duration-200 active:scale-[0.97] shadow-[0_4px_14px_rgba(16,185,129,0.25)]">
+                className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-[var(--accent)] text-white font-semibold text-sm hover:bg-emerald-500 transition-all duration-300 active:scale-[0.97] shadow-[0_4px_20px_rgba(16,185,129,0.25)] cursor-pointer">
                 {isAuthenticated ? text.home : text.register}
-                <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
               {!isAuthenticated && (
                 <Link href="/countries"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[var(--border)] text-[var(--foreground)] font-semibold text-sm hover:border-[var(--accent)]/40 hover:bg-[var(--accent-dim)] transition-all duration-200">
+                  className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl border border-[var(--border)] bg-[var(--card)]/40 backdrop-blur-md text-[var(--foreground)] font-semibold text-sm hover:border-[var(--accent)]/40 hover:bg-[var(--accent-dim)] transition-all duration-300">
                   {navText.destinations}
                 </Link>
               )}
-            </div>
+            </motion.div>
 
-            {/* Mini stats under CTA */}
-            <div className="reveal-up delay-400 flex flex-wrap gap-6 pt-2">
-              {STATS.slice(0, 3).map((s) => (
-                <div key={s.label}>
-                  <div className="text-2xl font-bold tracking-tight">{s.value}</div>
-                  <div className="text-xs text-[var(--muted)] mt-0.5">{s.label}</div>
-                </div>
+            {/* Micro stats grid */}
+            <motion.div 
+              variants={itemVariants}
+              className="flex flex-wrap gap-8 pt-4 border-t border-[var(--border)] max-w-lg"
+            >
+              {STATS.slice(0, 3).map((s, idx) => {
+                let value = s.value;
+                if (idx === 0) value = String(dbStats.countries);
+                if (idx === 1) value = String(dbStats.programs);
+                return (
+                  <div key={s.label} className="space-y-1">
+                    <div className="text-3xl font-black tracking-tight text-[var(--foreground)]">{value}</div>
+                    <div className="text-xs text-[var(--muted)] font-medium tracking-wide">{s.label}</div>
+                  </div>
+                );
+              })}
+            </motion.div>
+          </motion.div>
+
+          {/* Right Column: Auto-cycling hero slideshow */}
+          <div className="hidden lg:flex h-[480px] relative z-10 rounded-3xl overflow-hidden border border-[var(--border)] items-end">
+            {/* Slides stacked, cross-fade via opacity */}
+            {HERO_SLIDES.map((src, i) => (
+              <img
+                key={src}
+                src={src}
+                alt="Travel"
+                className="absolute inset-0 w-full h-full object-cover brightness-[0.55] transition-opacity duration-1000"
+                style={{ opacity: i === slideIndex ? 1 : 0 }}
+              />
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            {/* Floating city chips */}
+            {[
+              { label: "Berlin, DE", pos: "top-8 right-8" },
+              { label: "Toronto, CA", pos: "top-1/2 right-6" },
+              { label: "Prague, CZ", pos: "bottom-20 left-8" },
+            ].map(({ label, pos }) => (
+              <div key={label} className={`absolute ${pos} glass rounded-full px-3 py-1.5 flex items-center gap-1.5`}>
+                <MapPin size={10} className="text-[var(--accent)]" />
+                <span className="text-[11px] font-medium text-white/80">{label}</span>
+              </div>
+            ))}
+            {/* Slide dots */}
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+              {HERO_SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSlideIndex(i)}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === slideIndex
+                      ? "w-5 h-1.5 bg-[var(--accent)]"
+                      : "w-1.5 h-1.5 bg-white/30 hover:bg-white/50"
+                  }`}
+                />
               ))}
             </div>
-          </div>
-
-          {/* Right: Globe visualization */}
-          <div className="hidden lg:block reveal-fade delay-200 h-[480px] relative">
-            <GlobeViz />
+            <div className="relative z-10 p-8 space-y-1">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--accent)]">47 направлений</p>
+              <p className="text-xl font-black text-white tracking-tight">Твой мир без границ</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Destinations Marquee ─────────────────────────────── */}
-      <div className="border-y border-[var(--border)] overflow-hidden py-4 bg-[var(--card)]">
-        <div className="flex animate-marquee whitespace-nowrap gap-0 will-change-transform">
-          {[...DESTINATIONS, ...DESTINATIONS].map((d, i) => (
-            <span key={i} className="inline-flex items-center gap-3 px-6 text-sm font-medium text-[var(--muted)]">
-              <span className="w-1 h-1 rounded-full bg-[var(--accent)] shrink-0" />
-              {d}
-            </span>
+      {/* ─── Country Showcase Section — visual-centric ────────── */}
+      <section className="py-24 px-4 md:px-6 max-w-[1440px] mx-auto w-full relative z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-3 flex items-center gap-1.5">
+              <Sparkles size={12} className="animate-pulse-dot" />
+              Новый старт
+            </p>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight">
+              Популярные направления релокации
+            </h2>
+          </div>
+          <Link href="/countries" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--accent)] hover:opacity-85 transition-opacity">
+            Смотреть все страны <ChevronRight size={14} />
+          </Link>
+        </div>
+
+        {/* Premium Grid of country cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {POPULAR_COUNTRIES.map((c, idx) => (
+            <Link href={`/countries/${c.id}`} key={c.id}>
+              <div 
+                className="group relative h-[360px] rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-sm hover:shadow-xl hover:border-[var(--accent)]/30 transition-all duration-300 flex flex-col justify-end p-6 cursor-pointer"
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
+                {/* Background image container */}
+                <div className="absolute inset-0 z-0 overflow-hidden">
+                  <img 
+                    src={c.image} 
+                    alt={c.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 filter brightness-[0.7] dark:brightness-[0.55]" 
+                  />
+                  {/* Subtle Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/20 to-transparent opacity-90" />
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{c.flag}</span>
+                    <h3 className="font-bold text-lg text-white group-hover:text-[var(--accent)] transition-colors">
+                      {c.name}
+                    </h3>
+                  </div>
+
+                  <p className="text-xs text-neutral-300 leading-relaxed line-clamp-2">
+                    {c.description}
+                  </p>
+
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[var(--accent)] bg-[var(--accent-dim)] px-2 py-0.5 rounded-full">
+                      {c.programs.split(",")[0]}
+                    </span>
+                    <span className="text-white text-[10px] font-medium opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all flex items-center gap-1">
+                      Подробнее <ArrowRight size={10} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ─── Features — 2-column zig-zag, NO 3-column grid ────── */}
-      <section className="py-24 px-6 md:px-10 max-w-7xl mx-auto w-full">
-        <div className="mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-3">Возможности</p>
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight">
-            {text.programs}
-          </h2>
+      {/* ─── Features — Editorial Bento ──────────────────────── */}
+      <section className="py-24 px-4 md:px-6 max-w-[1440px] mx-auto w-full relative z-10 border-t border-[var(--border)]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-3">Возможности</p>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight">
+              {text.programs}
+            </h2>
+          </div>
+          <Link href={isAuthenticated ? "/home" : "/register"}
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--accent)] hover:opacity-85 transition-opacity shrink-0">
+            {text.detailedInfo} <ArrowRight size={13} />
+          </Link>
         </div>
 
-        <div className="space-y-6">
-          {/* Row 1: 2-col left emphasis */}
-          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
-            <div className="spotlight glass dark:bg-[var(--card)] rounded-3xl p-8 border border-[var(--border)] hover:border-[var(--accent)]/25 transition-all duration-300">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-dim)] flex items-center justify-center mb-6">
-                <TrendingUp size={18} className="text-[var(--accent)]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">{text.program1}</h3>
-              <p className="text-[var(--muted)] leading-relaxed text-sm max-w-[55ch]">{text.desc1}</p>
-            </div>
+        {/* Bento grid: 3 rows, asymmetric */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
 
-            <div className="spotlight glass dark:bg-[var(--card)] rounded-3xl p-8 border border-[var(--border)] hover:border-[var(--accent)]/25 transition-all duration-300 flex flex-col justify-between">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-dim)] flex items-center justify-center mb-6">
-                <Shield size={18} className="text-[var(--accent)]" />
+          {/* Card 1 — WIDE photo card: Education abroad → /countries */}
+          <Link href="/countries" className="md:col-span-7 group relative h-[320px] rounded-3xl overflow-hidden border border-[var(--border)] block">
+            <img
+              src="https://d-msso.udsu.ru/files/kartinki-dlya-novostej/002366-obrazovanie_za_rubejom.jpg"
+              alt="Education abroad"
+              className="absolute inset-0 w-full h-full object-cover brightness-[0.45] transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-transparent to-transparent" />
+            <div className="absolute inset-0 p-8 flex flex-col justify-between">
+              <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center">
+                <GraduationCap size={20} className="text-white" />
               </div>
-              <div>
-                <h3 className="text-xl font-bold mb-3">{text.program2}</h3>
-                <p className="text-[var(--muted)] text-sm leading-relaxed">{text.desc2}</p>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white tracking-tight group-hover:text-[var(--accent)] transition-colors">{text.program1}</h3>
+                <p className="text-sm text-white/65 leading-relaxed max-w-[44ch]">{text.desc1}</p>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
+                  Выбрать страну <ArrowRight size={11} />
+                </span>
               </div>
             </div>
+          </Link>
+
+          {/* Card 2 — NARROW stat card: success rate → /programs */}
+          <Link href="/programs" className="md:col-span-5 group relative rounded-3xl overflow-hidden border border-[var(--accent)]/20 bg-[var(--accent-dim)] flex flex-col justify-between p-8 h-[320px] block">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)] rounded-full blur-[80px] opacity-20 pointer-events-none" />
+            <div className="space-y-1">
+              <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)]">Успешность</p>
+              <p className="text-xs text-[var(--muted)] max-w-[30ch]">проверенная статистика зачислений</p>
+            </div>
+            <div>
+              <div className="text-[80px] font-black leading-none tracking-tighter text-[var(--accent)]">91<span className="text-4xl">.3%</span></div>
+              <div className="mt-4 flex flex-col gap-2">
+                {[
+                  "Прямая подача документов без посредников",
+                  `${dbStats.programs} активных программ в каталоге`,
+                  "Полное юридическое и визовое сопровождение"
+                ].map(s => (
+                  <div key={s} className="flex items-center gap-2 text-xs text-[var(--muted)] animate-fade-in">
+                    <CheckCircle size={11} className="text-[var(--accent)] shrink-0" />
+                    {s}
+                  </div>
+                ))}
+              </div>
+              <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-bold text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
+                Смотреть программы <ArrowRight size={11} />
+              </span>
+            </div>
+          </Link>
+
+          {/* Card 3 — MEDIUM photo card: Work & Internships → /programs */}
+          <Link href="/programs" className="md:col-span-5 group relative h-[280px] rounded-3xl overflow-hidden border border-[var(--border)] block">
+            <img
+              src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=700&q=80"
+              alt="Work abroad"
+              className="absolute inset-0 w-full h-full object-cover brightness-[0.4] transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-0 p-7 flex flex-col justify-between">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center">
+                <Briefcase size={17} className="text-white" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-black text-white tracking-tight group-hover:text-[var(--accent)] transition-colors">{text.program2}</h3>
+                <p className="text-xs text-white/60 leading-relaxed">{text.desc2}</p>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
+                  К программам <ArrowRight size={10} />
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          {/* Card 4 — MEDIUM photo card: Language Courses → /language-courses */}
+          <Link href="/language-courses" className="md:col-span-4 group relative h-[280px] rounded-3xl overflow-hidden border border-[var(--border)] block">
+            <img
+              src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=700&q=80"
+              alt="Languages"
+              className="absolute inset-0 w-full h-full object-cover brightness-[0.4] transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-0 p-7 flex flex-col justify-between">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center">
+                <Languages size={17} className="text-white" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-black text-white tracking-tight group-hover:text-[var(--accent)] transition-colors">Языковые курсы</h3>
+                <p className="text-xs text-white/60 leading-relaxed">Английский, немецкий, турецкий, китайский — курсы в Душанбе</p>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
+                  Выбрать курс <ArrowRight size={10} />
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          {/* Card 5 — NARROW CTA card */}
+          <div className="md:col-span-3 relative rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)] p-7 h-[280px] flex flex-col justify-between">
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 pointer-events-none" />
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-2xl bg-[var(--accent-dim)] flex items-center justify-center">
+                <MapPin size={17} className="text-[var(--accent)]" />
+              </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] pt-2">47 стран</p>
+              <h3 className="text-lg font-black tracking-tight text-balance leading-snug">Найди своё направление</h3>
+            </div>
+            <Link href="/countries"
+              className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white font-bold text-xs hover:bg-emerald-500 transition-all active:scale-[0.97] w-fit">
+              Смотреть страны <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+            </Link>
           </div>
 
-          {/* Row 2: 2-col right emphasis */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6">
-            <div className="spotlight glass dark:bg-[var(--card)] rounded-3xl p-8 border border-[var(--border)] hover:border-[var(--accent)]/25 transition-all duration-300 flex flex-col justify-center items-center text-center">
-              <div className="text-5xl font-bold tracking-tighter text-[var(--accent)] mb-2">91.3%</div>
-              <div className="text-sm text-[var(--muted)]">{STATS[3].sub}</div>
-            </div>
-
-            <div className="spotlight glass dark:bg-[var(--card)] rounded-3xl p-8 border border-[var(--border)] hover:border-[var(--accent)]/25 transition-all duration-300">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-dim)] flex items-center justify-center mb-6">
-                <Zap size={18} className="text-[var(--accent)]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">{text.program3}</h3>
-              <p className="text-[var(--muted)] leading-relaxed text-sm max-w-[55ch]">{text.desc3}</p>
-              <Link href={isAuthenticated ? "/home" : "/register"}
-                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] hover:gap-3 transition-all duration-200">
-                {text.detailedInfo} <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
 
       {/* ─── Footer ──────────────────────────────────────────────── */}
-      <footer className="border-t border-[var(--border)] py-8 px-6 md:px-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-[var(--border)] py-8 px-4 md:px-6 relative z-10">
+        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-[var(--accent)] flex items-center justify-center">
               <Globe size={12} className="text-white" />

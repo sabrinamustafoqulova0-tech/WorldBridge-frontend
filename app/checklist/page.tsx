@@ -137,55 +137,26 @@ export default function ChecklistPage() {
         );
     }
 
-    return (
-        <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
+  return (
+    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
 
-            {/* Navbar */}
-            <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => router.back()}
-                        className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-                    >
-                        <ArrowLeft size={14} /> Назад
-                    </button>
-                    <div className="h-4 w-px bg-[var(--border)] hidden sm:block" />
-                    <Link href="/" className="hidden sm:flex items-center gap-2 group">
-                        <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-                            <Globe size={13} className="text-white" strokeWidth={2.5} />
-                        </div>
-                        <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
-                    </Link>
-                </div>
-                <div className="flex items-center space-x-3">
-                    {mounted && (
-                        <button
-                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-                        >
-                            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-                        </button>
-                    )}
-                </div>
-            </nav>
+      {/* Header */}
+      <div className="pt-24 pb-8 px-4 md:px-6">
+        <div className="max-w-[1440px] mx-auto space-y-3">
+          <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
+            <ClipboardList size={12} />
+            Личный трекер
+          </p>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter leading-tight">
+            Мой чеклист
+          </h1>
+          <p className="text-sm text-[var(--muted)] leading-relaxed max-w-[45ch]">
+            Отслеживайте прогресс подготовки к переезду шаг за шагом.
+          </p>
+        </div>
+      </div>
 
-            {/* Header */}
-            <div className="pt-24 pb-8 px-5 md:px-8">
-                <div className="max-w-2xl mx-auto space-y-3">
-                    <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
-                        <ClipboardList size={12} />
-                        Личный трекер
-                    </p>
-                    <h1 className="text-3xl md:text-5xl font-bold tracking-tighter leading-tight">
-                        Мой чеклист
-                    </h1>
-                    <p className="text-sm text-[var(--muted)] leading-relaxed max-w-[45ch]">
-                        Отслеживайте прогресс подготовки к переезду шаг за шагом.
-                    </p>
-                </div>
-            </div>
-
-            <div className="max-w-2xl mx-auto px-5 md:px-8 w-full space-y-6">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full space-y-6">
 
                 {/* Progress card */}
                 {items.length > 0 && (

@@ -1,21 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useTheme } from "next-themes";
-import { useAuthStore } from "../../store/authStore";
+import { useEffect, useState } from "react";
+import api from "../../lib/api";
 import { useLangStore } from "../../store/langStore";
 import { translations } from "../../locales/translations";
-import api from "../../lib/api";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Globe,
-  Moon,
-  Sun,
-  Clock,
-  BookOpen,
-  ArrowRight,
+  Search,
+  Calendar,
   Eye,
+  ArrowRight,
+  BookOpen,
+  Clock,
 } from "lucide-react";
 
 interface Article {
@@ -24,202 +21,226 @@ interface Article {
   title: string;
   excerpt: string;
   cover_image_url: string | null;
-  is_published: boolean;
   views_count: number;
   created_at: string;
 }
 
-export default function ArticlesPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const { lang } = useLangStore();
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
+const FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=800&q=80",
+];
 
+export default function ArticlesListPage() {
+  const { lang } = useLangStore();
   const navText = translations[lang]?.nav || translations.ru.nav;
 
-  useEffect(() => { setMounted(true); }, []);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    api.get("/articles?page=1&size=20")
-      .then((res) => setArticles(res.data.items || []))
-      .catch(() => setArticles([]))
-      .finally(() => setLoading(false));
+    const fetchArticles = async () => {
+      try {
+        const res = await api.get("/articles");
+        setArticles(res.data.items);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArticles();
   }, []);
 
-  const featured = articles[0];
-  const rest = articles.slice(1);
+  const filteredArticles = articles.filter(a =>
+    a.title.toLowerCase().includes(search.toLowerCase()) ||
+    a.excerpt.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 24, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
+    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24 relative overflow-hidden">
 
-      {/* ─── Navbar ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-        <div className="flex items-center gap-4">
-          <Link href="/home" className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
-            <ArrowLeft size={14} /> Назад
-          </Link>
-          <div className="h-4 w-px bg-[var(--border)] hidden sm:block"></div>
-          <Link href="/" className="hidden sm:flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-              <Globe size={13} className="text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
-          </Link>
-        </div>
+      {/* Ambient lighting */}
+      <div className="absolute top-0 left-[20%] w-[50dvw] h-[40dvw] bg-[var(--accent)] rounded-full blur-[160px] opacity-[0.04] pointer-events-none z-0" />
 
-        <div className="hidden md:flex items-center gap-6 text-[13px] font-medium text-[var(--muted)]">
-          <Link href="/programs" className="hover:text-[var(--foreground)] transition-colors">{navText.programs}</Link>
-          <Link href="/countries" className="hover:text-[var(--foreground)] transition-colors">{navText.destinations}</Link>
-          <span className="font-semibold text-[var(--foreground)]">{navText.insights}</span>
-          <Link href="/calculator" className="hover:text-[var(--foreground)] transition-colors">{navText.estimator}</Link>
-        </div>
+      {/* ─── Editorial Hero ────────────────────────────────────── */}
+      <div className="relative z-10 pt-28 pb-16 px-4 md:px-6">
+        <div className="max-w-[1440px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-3xl space-y-5"
+          >
+            <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-2">
+              <BookOpen size={12} />
+              {navText.insights || "Статьи"}
+            </p>
 
-        <div className="flex items-center space-x-3">
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-            >
-              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-          )}
-          {!authLoading && (
-            isAuthenticated ? (
-              <Link href="/profile" className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">Профиль</Link>
-            ) : (
-              <Link href="/login" className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">{navText.login}</Link>
-            )
-          )}
-        </div>
-      </nav>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[1.0] text-balance">
+              База знаний{" "}
+              <span className="text-[var(--accent)]">и инсайты</span>
+            </h1>
 
-      {/* ─── Hero header ────────────────────────────────────────── */}
-      <div className="pt-24 pb-10 px-5 md:px-8">
-        <div className="max-w-4xl mx-auto space-y-3">
-          <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
-            <BookOpen size={12} />
-            Полезные гайды и инсайты
-          </p>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter leading-tight text-balance">
-            Статьи и инструкции
-          </h1>
-          <p className="text-sm md:text-base text-[var(--muted)] leading-relaxed max-w-[55ch]">
-            Практические советы, инструкции по документам и реальный опыт переехавших в Европу и мир.
-          </p>
+            <p className="text-sm md:text-base text-[var(--muted)] leading-relaxed max-w-[55ch] font-light">
+              Полезные статьи, руководства и личные истории о переезде, адаптации, учёбе и карьере за границей.
+            </p>
+          </motion.div>
+
+          {/* Search */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="relative max-w-md w-full mt-8"
+          >
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+            <input
+              type="text"
+              placeholder="Поиск статей..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
+            />
+          </motion.div>
         </div>
       </div>
 
-      {/* ─── Content ────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-5 md:px-8 w-full flex-1">
-
+      {/* ─── Article Grid ─────────────────────────────────────── */}
+      <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full flex-1 relative z-10">
         {loading ? (
-          <div className="space-y-4">
-            {/* Featured skeleton */}
-            <div className="border border-[var(--border)] rounded-3xl p-6 md:p-8 space-y-4">
-              <div className="skeleton h-3 w-20 rounded-full" />
-              <div className="skeleton h-7 w-3/4 rounded-xl" />
-              <div className="skeleton h-4 w-full rounded-lg" />
-              <div className="skeleton h-4 w-2/3 rounded-lg" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="border border-[var(--border)] rounded-2xl p-6 space-y-3">
-                  <div className="skeleton h-3 w-16 rounded-full" />
-                  <div className="skeleton h-5 w-4/5 rounded-lg" />
-                  <div className="skeleton h-3 w-full rounded" />
-                  <div className="skeleton h-3 w-2/3 rounded" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : articles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--accent-dim)] border border-[var(--accent)]/20 flex items-center justify-center">
-              <BookOpen size={24} className="text-[var(--accent)] opacity-60" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-bold">Статей пока нет</p>
-              <p className="text-xs text-[var(--muted)]">Скоро здесь появятся полезные материалы</p>
-            </div>
+          <div className="flex justify-center items-center h-48">
+            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
           </div>
         ) : (
-          <div className="space-y-6">
+          <>
+            {/* Featured first article — big editorial card */}
+            {filteredArticles.length > 0 && !search && (
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-8"
+              >
+                <Link href={`/articles/${filteredArticles[0].slug}`}>
+                  <div className="group relative h-[400px] md:h-[480px] rounded-3xl overflow-hidden border border-[var(--border)] cursor-pointer">
+                    <img
+                      src={filteredArticles[0].cover_image_url || FALLBACK_IMAGES[0]}
+                      alt={filteredArticles[0].title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-[0.6]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-            {/* Featured Hero Article */}
-            {featured && (
-              <Link href={`/articles/${featured.slug}`}>
-                <div className="group border border-[var(--border)] rounded-3xl bg-[var(--card)] hover:border-[var(--accent)]/20 transition-all duration-300 p-6 md:p-8 cursor-pointer relative overflow-hidden shadow-sm">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] rounded-full blur-[60px] opacity-5 pointer-events-none" />
-                  <div className="relative z-10 space-y-4">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border text-[var(--accent)] bg-[var(--accent-dim)] border-[var(--accent)]/20">
-                        Главная статья
+                    <div className="absolute bottom-0 left-0 right-0 p-8 space-y-3">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-[var(--accent-dim)] border border-[var(--accent)]/30 px-3 py-1 rounded-full backdrop-blur-sm">
+                        <BookOpen size={9} /> Главная статья
                       </span>
-                      <span className="text-[11px] text-[var(--muted)] flex items-center gap-1">
-                        <Eye size={11} /> {featured.views_count} просмотров
-                      </span>
-                      <span className="text-[11px] text-[var(--muted)]">•</span>
-                      <span className="text-[11px] text-[var(--muted)]">
-                        {new Date(featured.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
-                      </span>
-                    </div>
-
-                    <h2 className="text-xl md:text-2xl font-bold tracking-tight group-hover:text-[var(--accent)] transition-colors leading-tight max-w-[45ch]">
-                      {featured.title}
-                    </h2>
-
-                    <p className="text-xs sm:text-sm text-[var(--muted)] leading-relaxed max-w-[65ch]">
-                      {featured.excerpt}
-                    </p>
-
-                    <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)]">
-                      Читать гайд <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            )}
-
-            {/* Sub-grid Articles */}
-            {rest.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {rest.map((article) => (
-                  <Link href={`/articles/${article.slug}`} key={article.id}>
-                    <div className="group border border-[var(--border)] rounded-2xl bg-[var(--card)] hover:border-[var(--accent)]/20 transition-all duration-300 p-6 cursor-pointer flex flex-col justify-between relative overflow-hidden shadow-sm h-full">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[11px] text-[var(--muted)] flex items-center gap-1">
-                            <Eye size={10} /> {article.views_count}
-                          </span>
-                        </div>
-
-                        <h3 className="font-bold text-sm sm:text-base group-hover:text-[var(--accent)] transition-colors leading-snug line-clamp-2">
-                          {article.title}
-                        </h3>
-
-                        <p className="text-[12px] sm:text-xs text-[var(--muted)] leading-relaxed line-clamp-3">
-                          {article.excerpt}
-                        </p>
-                      </div>
-
-                      <div className="mt-5 pt-4 border-t border-[var(--border)] flex items-center justify-between text-[10px] sm:text-[11px] text-[var(--muted)]">
-                        <span>{new Date(article.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</span>
-                        <span className="font-semibold text-[var(--accent)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                          Читать <ArrowRight size={11} />
+                      <h2 className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tight group-hover:text-[var(--accent)] transition-colors max-w-2xl text-balance">
+                        {filteredArticles[0].title}
+                      </h2>
+                      <p className="text-sm text-white/70 leading-relaxed max-w-xl line-clamp-2">
+                        {filteredArticles[0].excerpt}
+                      </p>
+                      <div className="flex items-center gap-4 pt-1 text-white/50 text-[11px]">
+                        <span className="flex items-center gap-1"><Eye size={11} /> {filteredArticles[0].views_count}</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar size={11} />
+                          {new Date(filteredArticles[0].created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
+                        </span>
+                        <span className="ml-auto inline-flex items-center gap-1.5 font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
+                          Читать <ArrowRight size={12} />
                         </span>
                       </div>
                     </div>
-                  </Link>
-                ))}
-              </div>
+                  </div>
+                </Link>
+              </motion.div>
             )}
 
-          </div>
+            {/* Rest of articles — 3-column grid */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {(search ? filteredArticles : filteredArticles.slice(1)).map((article, idx) => (
+                <motion.div key={article.id} variants={itemVariants}>
+                  <Link href={`/articles/${article.slug}`}>
+                    <div className="group border border-[var(--border)] rounded-2xl overflow-hidden bg-[var(--card)] hover:border-[var(--accent)]/30 hover:shadow-lg transition-all duration-300 flex flex-col h-full cursor-pointer">
+
+                      {/* Cover */}
+                      <div className="relative h-48 overflow-hidden bg-[var(--border)]/10 shrink-0">
+                        <img
+                          src={article.cover_image_url || FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length]}
+                          alt={article.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 brightness-[0.85] dark:brightness-[0.7]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)]/60 to-transparent" />
+                        <span className="absolute top-3 left-3 text-[9px] font-bold px-2.5 py-1 rounded-full bg-[var(--background)]/90 border border-[var(--border)] text-[var(--accent)] backdrop-blur-sm">
+                          Статья
+                        </span>
+                      </div>
+
+                      {/* Body */}
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <h3 className="font-bold text-sm leading-snug group-hover:text-[var(--accent)] transition-colors line-clamp-2">
+                            {article.title}
+                          </h3>
+                          <p className="text-xs text-[var(--muted)] leading-relaxed line-clamp-3">
+                            {article.excerpt}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-[var(--border)]/60 pt-3 text-[11px] text-[var(--muted)]">
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1"><Eye size={10} /> {article.views_count}</span>
+                            <span className="flex items-center gap-1">
+                              <Clock size={10} />
+                              {new Date(article.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+                            </span>
+                          </div>
+                          <span className="inline-flex items-center gap-1 font-semibold text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
+                            Читать <ArrowRight size={10} />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {filteredArticles.length === 0 && (
+              <div className="text-center py-20 text-[var(--muted)] text-sm font-light">
+                Ничего не найдено по вашему запросу.
+              </div>
+            )}
+          </>
         )}
       </div>
-
     </div>
   );
 }

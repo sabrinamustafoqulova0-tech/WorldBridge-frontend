@@ -112,40 +112,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
 
-      {/* ─── Navbar ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-        <div className="flex items-center gap-4">
-          <Link href="/home" className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
-            <ArrowLeft size={14} /> Назад
-          </Link>
-          <div className="h-4 w-px bg-[var(--border)] hidden sm:block"></div>
-          <Link href="/" className="hidden sm:flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-              <Globe size={13} className="text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
-          </Link>
-        </div>
-        <div className="flex items-center space-x-3">
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-            >
-              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-          )}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs font-semibold text-rose-500 hover:text-rose-400 transition-colors"
-          >
-            <LogOut size={13} />
-            <span className="hidden sm:inline">Выйти</span>
-          </button>
-        </div>
-      </nav>
-
-      <main className="pt-24 px-5 md:px-8 max-w-4xl mx-auto w-full space-y-6 flex-1">
+      <main className="pt-24 px-4 md:px-6 max-w-[1440px] mx-auto w-full space-y-6 flex-1">
 
         {/* ─── Profile Hero ───────────────────────────────────────── */}
         <div className="relative glass border border-[var(--border)] rounded-3xl p-6 md:p-8 overflow-hidden shadow-sm">

@@ -137,39 +137,9 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] flex flex-col font-sans pb-24">
       
-      {/* ─── Navbar ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => router.back()} 
-            className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-          >
-            <ArrowLeft size={14} /> Назад
-          </button>
-          <div className="h-4 w-px bg-[var(--border)] hidden sm:block"></div>
-          <Link href="/" className="hidden sm:flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-              <Globe size={13} className="text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
-          </Link>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {mounted && (
-            <button 
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-            >
-              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-          )}
-        </div>
-      </nav>
-
       {/* ─── Hero Header Area ────────────────────────────────────── */}
-      <div className="pt-24 pb-12 px-5 md:px-8 border-b border-[var(--border)] bg-[var(--card)]/40">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="pt-24 pb-12 px-4 md:px-6 border-b border-[var(--border)] bg-[var(--card)]/40">
+        <div className="max-w-[1440px] mx-auto space-y-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
               {program.category}
@@ -195,7 +165,7 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
       </div>
 
       {/* ─── Main Columns Asymmetric Bento ───────────────────────── */}
-      <div className="max-w-4xl mx-auto px-5 md:px-8 mt-12 w-full grid grid-cols-1 md:grid-cols-[1.7fr_1.3fr] gap-12 items-start">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-6 mt-12 w-full grid grid-cols-1 md:grid-cols-[1.7fr_1.3fr] gap-12 items-start">
         
         {/* Left Column: Description & Pros/Cons */}
         <div className="space-y-10">

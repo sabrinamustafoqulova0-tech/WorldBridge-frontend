@@ -9,12 +9,8 @@ import { useLangStore } from "../../store/langStore";
 import { translations } from "../../locales/translations";
 import { getLocalizedField } from "../../utils/langHelper";
 import AuthGateModal from "../../components/AuthGateModal";
-import Link from "next/link";
+import { motion } from "framer-motion";
 import { 
-  ArrowLeft, 
-  Globe, 
-  Moon, 
-  Sun, 
   Search, 
   MapPin,
   ArrowRight,
@@ -30,15 +26,28 @@ interface Country {
   region: string;
 }
 
+const COUNTRY_IMAGES: Record<string, string> = {
+  de: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=600&q=80",
+  ca: "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=600&q=80",
+  fr: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80",
+  ch: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80",
+  at: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&w=600&q=80",
+  be: "https://selfguide.ru/wp-content/uploads/2012/08/Ghent-Belgium.jpg",
+  cn: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80",
+  cz: "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=600&q=80",
+  fi: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=600&q=80",
+  no: "https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=600&q=80",
+  pl: "https://vkurse.ua/wp-content/uploads/2025/10/chym-slavytsya-polshha.jpg",
+  se: "https://traveller-eu.ru/static/img/cover/malmyo_MVPZOxYHg_2x.jpg",
+  tr: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=600&q=80",
+  us: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80"
+};
+
 export default function CountriesListPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { lang } = useLangStore();
   const text = translations[lang]?.countries || translations.ru.countries;
-  const navText = translations[lang]?.nav || translations.ru.nav;
-
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +63,6 @@ export default function CountriesListPage() {
   };
 
   useEffect(() => {
-    setMounted(true);
     const fetchCountries = async () => {
       try {
         const res = await api.get("/countries");
@@ -74,50 +82,38 @@ export default function CountriesListPage() {
     c.region.toLowerCase().includes(search.toLowerCase())
   );
 
-  return (
-    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
-      
-      {/* ─── Navbar ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => router.back()} 
-            className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-          >
-            <ArrowLeft size={14} /> Назад
-          </button>
-          <div className="h-4 w-px bg-[var(--border)] hidden sm:block"></div>
-          <Link href="/" className="hidden sm:flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-              <Globe size={13} className="text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
-          </Link>
-        </div>
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
 
-        <div className="flex items-center space-x-3">
-          {mounted && (
-            <button 
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-            >
-              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-          )}
-          {!authLoading && !isAuthenticated && (
-            <Link 
-              href="/register" 
-              className="px-3 py-1.5 rounded-lg bg-[var(--foreground)] text-[var(--background)] text-[12px] font-bold hover:opacity-85 transition-all"
-            >
-              {navText.signup}
-            </Link>
-          )}
-        </div>
-      </nav>
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  return (
+    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24 relative">
+      
+      {/* Ambient decorative lighting */}
+      <div className="absolute top-0 right-0 w-[40dvw] h-[40dvw] bg-[var(--accent)] rounded-full blur-[140px] opacity-[0.04] pointer-events-none z-0" />
+      <div className="absolute top-[30%] left-[-10%] w-[35dvw] h-[35dvw] bg-emerald-500 rounded-full blur-[160px] opacity-[0.03] pointer-events-none z-0" />
 
       {/* ─── Hero Header Area — Left-Aligned ────────────────────── */}
-      <div className="pt-24 pb-12 px-5 md:px-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="pt-24 pb-12 px-4 md:px-6 relative z-10">
+        <div className="max-w-[1440px] mx-auto space-y-6">
           <div className="space-y-2">
             <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
               <Compass size={12} className="animate-spin-slow" />
@@ -146,49 +142,66 @@ export default function CountriesListPage() {
       </div>
 
       {/* ─── Grid / List Section — Bento inspired ───────────────── */}
-      <div className="max-w-4xl mx-auto px-5 md:px-8 w-full mt-4 flex-1">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full mt-4 flex-1 relative z-10">
         {loading ? (
           <div className="flex justify-center items-center h-48">
             <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredCountries.map((country, idx) => (
-                <button
-                  key={country.id}
-                  onClick={() => handleCountryClick(country.slug)}
-                  className="group block text-left w-full"
-                  style={{ animationDelay: `${idx * 40}ms` }}
-                >
-                  <div className="glass border border-[var(--border)] rounded-2xl p-5 hover:bg-[var(--card)] transition-all duration-200 flex items-start gap-4 h-full relative overflow-hidden">
-                    {/* Glow element */}
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)] rounded-full blur-[40px] opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity" />
-
-                    {/* Emoji Flag Container */}
-                    <div className="w-12 h-12 rounded-xl bg-[var(--background)] flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">
-                      {country.flag_emoji}
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {filteredCountries.map((country) => {
+                const bgImg = COUNTRY_IMAGES[country.slug.toLowerCase()] || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80";
+                return (
+                  <motion.button
+                    variants={itemVariants}
+                    key={country.id}
+                    onClick={() => handleCountryClick(country.slug)}
+                    className="group block text-left w-full relative h-[280px] rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-sm hover:shadow-xl hover:border-[var(--accent)]/30 transition-all duration-300 cursor-pointer"
+                  >
+                    {/* Background image container */}
+                    <div className="absolute inset-0 z-0 overflow-hidden">
+                      <img 
+                        src={bgImg} 
+                        alt={country.name_ru}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 filter brightness-[0.7] dark:brightness-[0.55]" 
+                      />
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/20 to-transparent opacity-95" />
                     </div>
 
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <h3 className="font-bold text-sm sm:text-base group-hover:text-[var(--accent)] transition-colors">
-                        {getLocalizedField(country, 'name', lang)}
-                      </h3>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider bg-[var(--border)]/20 px-2 py-0.5 rounded-md">
-                        <MapPin size={9} />
-                        {country.region}
-                      </span>
-                    </div>
+                    {/* Content */}
+                    <div className="absolute inset-0 p-6 flex flex-col justify-end z-10 space-y-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          {country.flag_emoji}
+                        </div>
+                        <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-[var(--accent)] transition-colors line-clamp-1">
+                          {getLocalizedField(country, 'name', lang)}
+                        </h3>
+                      </div>
 
-                    <div className="w-7 h-7 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all self-center shrink-0">
-                      <ArrowRight size={13} />
+                      <div className="flex items-center justify-between pt-2.5 border-t border-white/10">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-white bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-md uppercase tracking-wider">
+                          <MapPin size={9} />
+                          {country.region}
+                        </span>
+                        <div className="w-7 h-7 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm flex items-center justify-center text-white group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all">
+                          <ArrowRight size={12} />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </motion.button>
+                );
+              })}
+            </motion.div>
 
-          {filteredCountries.length === 0 && (
+            {filteredCountries.length === 0 && (
               <div className="text-center py-20 text-[var(--muted)] text-sm font-light">
                 {text.notFound || "Ничего не найдено по вашему запросу."}
               </div>

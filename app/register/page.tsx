@@ -51,7 +51,14 @@ function RegisterForm() {
         : "/login?registered=true";
       router.push(loginHref);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Ошибка регистрации. Попробуйте снова.");
+      const detail = err.response?.data?.detail;
+      if (typeof detail === "string") {
+        setError(detail);
+      } else if (Array.isArray(detail)) {
+        setError(detail.map((d: any) => `${d.loc?.[1] || "поле"}: ${d.msg}`).join(", "));
+      } else {
+        setError("Ошибка регистрации. Попробуйте снова.");
+      }
     }
   };
 

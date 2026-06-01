@@ -96,7 +96,14 @@ export default function AIConsultantPage() {
       const res = await api.post("/ai/consultation", payload);
       setResult(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Ошибка при получении рекомендаций. Попробуйте снова.");
+      const detail = err.response?.data?.detail;
+      if (typeof detail === "string") {
+        setError(detail);
+      } else if (Array.isArray(detail)) {
+        setError(detail.map((d: any) => `${d.loc?.[1] || "поле"}: ${d.msg}`).join(", "));
+      } else {
+        setError("Ошибка при получении рекомендаций. Попробуйте снова.");
+      }
     } finally {
       setLoading(false);
     }
@@ -113,39 +120,9 @@ export default function AIConsultantPage() {
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
 
-      {/* ─── Navbar ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-          >
-            <ArrowLeft size={14} /> Назад
-          </button>
-          <div className="h-4 w-px bg-[var(--border)] hidden sm:block" />
-          <Link href="/" className="hidden sm:flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-              <Globe size={13} className="text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
-          </Link>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-            >
-              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-          )}
-        </div>
-      </nav>
-
       {/* ─── Hero Header — LEFT-ALIGNED ────────────────────────── */}
-      <div className="pt-24 pb-8 px-5 md:px-8">
-        <div className="max-w-6xl mx-auto space-y-3">
+      <div className="pt-24 pb-8 px-4 md:px-6">
+        <div className="max-w-[1440px] mx-auto space-y-3">
           <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
             <BrainCircuit size={12} />
             Персональный AI-анализ
@@ -160,7 +137,7 @@ export default function AIConsultantPage() {
       </div>
 
       {/* ─── Main Grid ────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-5 md:px-8 w-full mt-4 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 items-start flex-1">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full mt-4 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 items-start flex-1">
 
         {/* ── Form Panel ───────────────────────────────────────── */}
         <div className="glass border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm h-fit">

@@ -148,44 +148,10 @@ export default function CalculatorPage() {
 
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
-      {/* ─── Navbar ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-        <Link href="/home" className="flex items-center gap-2 group">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-            <Globe size={13} className="text-white" strokeWidth={2.5} />
-          </div>
-          <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
-        </Link>
-
-        <div className="hidden md:flex items-center gap-6 text-[13px] font-medium text-[var(--muted)]">
-          <Link href="/programs" className="hover:text-[var(--foreground)] transition-colors">{navText.programs}</Link>
-          <Link href="/countries" className="hover:text-[var(--foreground)] transition-colors">{navText.destinations}</Link>
-          <Link href="/articles" className="hover:text-[var(--foreground)] transition-colors">{navText.insights}</Link>
-          <span className="font-semibold text-[var(--foreground)]">{navText.estimator}</span>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
-            >
-              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
-          )}
-          {!authLoading && (
-            isAuthenticated ? (
-              <Link href="/profile" className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">Профиль</Link>
-            ) : (
-              <Link href="/login" className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">{navText.login}</Link>
-            )
-          )}
-        </div>
-      </nav>
 
       {/* ─── Hero Header — LEFT-ALIGNED ────────────────────────── */}
-      <div className="pt-24 pb-8 px-5 md:px-8">
-        <div className="max-w-6xl mx-auto space-y-3">
+      <div className="pt-24 pb-8 px-4 md:px-6">
+        <div className="max-w-[1440px] mx-auto space-y-3">
           <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
             <Calculator size={12} />
             Интерактивный калькулятор
@@ -199,7 +165,7 @@ export default function CalculatorPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-5 md:px-8 w-full mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
 
         {/* INPUTS PANEL — 7 columns */}
         <div className="lg:col-span-7 space-y-6">
