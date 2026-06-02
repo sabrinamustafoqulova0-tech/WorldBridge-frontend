@@ -2,97 +2,99 @@
 
 import { useAuthStore } from "../../store/authStore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useLangStore } from "../../store/langStore";
 import { useAIConsultantStore } from "../../store/aiConsultantStore";
 import { translations } from "../../locales/translations";
-import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
-import { Globe, Moon, Sun, User, LogOut, Sparkles, Plus, Minus, RotateCcw, MapPin, Search, X, CheckCircle2, Building, ExternalLink, FileText } from "lucide-react";
+import { motion } from "framer-motion";
+import { MapPin, Search, X, CheckCircle2, Building, ExternalLink, FileText } from "lucide-react";
+
+const WorldGlobe = dynamic(() => import("../../components/WorldGlobe"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+    </div>
+  ),
+});
 
 const COUNTRIES = [
-  { id: "de", name: "Germany", programs: 142, x: 51.5, y: 31, labelClass: "bottom-3 left-1/2 -translate-x-1/2 items-center flex-col-reverse" },
-  { id: "fr", name: "France", programs: 89, x: 48, y: 35, labelClass: "top-3 right-3 items-end" },
-  { id: "be", name: "Belgium", programs: 58, x: 49.5, y: 32, labelClass: "bottom-3 right-3 items-end flex-col-reverse" },
-  { id: "ch", name: "Switzerland", programs: 64, x: 50.3, y: 35.5, labelClass: "top-3 right-3 items-end" },
-  { id: "at", name: "Austria", programs: 47, x: 52.8, y: 34.8, labelClass: "top-3 left-3 items-start" },
-  { id: "pl", name: "Poland", programs: 112, x: 54.5, y: 31, labelClass: "bottom-3 left-3 items-start flex-col-reverse" },
-  { id: "cz", name: "Czechia", programs: 38, x: 53.2, y: 33, labelClass: "top-3 left-1/2 -translate-x-1/2 items-center" },
-  { id: "se", name: "Sweden", programs: 76, x: 53.5, y: 20, labelClass: "bottom-3 left-1/2 -translate-x-1/2 items-center flex-col-reverse" },
-  { id: "no", name: "Norway", programs: 41, x: 50.5, y: 19, labelClass: "bottom-3 right-3 items-end flex-col-reverse" },
-  { id: "fi", name: "Finland", programs: 53, x: 57.5, y: 19, labelClass: "bottom-3 left-3 items-start flex-col-reverse" },
-  { id: "tr", name: "Turkey", programs: 125, x: 59.5, y: 39, labelClass: "top-3 left-1/2 -translate-x-1/2 items-center" },
-  { id: "cn", name: "China", programs: 215, x: 77.5, y: 41, labelClass: "top-3 left-1/2 -translate-x-1/2 items-center" },
-  { id: "ca", name: "Canada", programs: 184, x: 19, y: 25, labelClass: "top-3 left-1/2 -translate-x-1/2 items-center" },
-  { id: "us", name: "USA", programs: 342, x: 20, y: 38, labelClass: "top-3 left-1/2 -translate-x-1/2 items-center" },
-];
-
-const CONNECTIONS = [
-  ["us", "ca"], ["ca", "fr"], ["us", "fr"], ["fr", "be"], ["be", "de"],
-  ["fr", "ch"], ["ch", "at"], ["de", "ch"], ["de", "at"], ["de", "cz"],
-  ["cz", "pl"], ["pl", "de"], ["de", "se"], ["se", "no"], ["se", "fi"],
-  ["fi", "cn"], ["pl", "cn"], ["at", "cn"], ["at", "tr"], ["tr", "cn"], ["tr", "pl"]
+  { id: "de", name: "Germany",     programs: 142, lat: 51.1657,  lng: 10.4515  },
+  { id: "fr", name: "France",      programs: 89,  lat: 46.2276,  lng: 2.2137   },
+  { id: "be", name: "Belgium",     programs: 58,  lat: 50.5039,  lng: 4.4699   },
+  { id: "ch", name: "Switzerland", programs: 64,  lat: 46.8182,  lng: 8.2275   },
+  { id: "at", name: "Austria",     programs: 47,  lat: 47.5162,  lng: 14.5501  },
+  { id: "pl", name: "Poland",      programs: 112, lat: 51.9194,  lng: 19.1451  },
+  { id: "cz", name: "Czechia",     programs: 38,  lat: 49.8175,  lng: 15.4730  },
+  { id: "se", name: "Sweden",      programs: 76,  lat: 60.1282,  lng: 18.6435  },
+  { id: "no", name: "Norway",      programs: 41,  lat: 60.4720,  lng: 8.4689   },
+  { id: "fi", name: "Finland",     programs: 53,  lat: 61.9241,  lng: 25.7482  },
+  { id: "tr", name: "Turkey",      programs: 125, lat: 38.9637,  lng: 35.2433  },
+  { id: "cn", name: "China",       programs: 215, lat: 35.8617,  lng: 104.1954 },
+  { id: "ca", name: "Canada",      programs: 184, lat: 56.1304,  lng: -106.3468 },
+  { id: "us", name: "USA",         programs: 342, lat: 37.0902,  lng: -95.7129 },
 ];
 
 const PROJECTS: Record<string, any[]> = {
   de: [
-    { id: "p1", slug: "de-ausbildung", name: "Ausbildung", description: "Профессиональное обучение", city: "Германия", x: 52.5, y: 31.5 },
-    { id: "p2", slug: "de-study", name: "Studium", description: "Высшее образование", city: "Германия", x: 51.5, y: 33.5 },
+    { id: "p1",  slug: "de-ausbildung",      name: "Ausbildung",          description: "Профессиональное обучение",            city: "Берлин",    lat: 52.5200,  lng: 13.4050  },
+    { id: "p2",  slug: "de-study",           name: "Studium",             description: "Высшее образование",                   city: "Мюнхен",    lat: 48.1351,  lng: 11.5820  },
   ],
   fr: [
-    { id: "p3", slug: "fr-erasmus", name: "Erasmus+", description: "Академический обмен", city: "Франция", x: 47.5, y: 38 }
+    { id: "p3",  slug: "fr-erasmus",         name: "Erasmus+",            description: "Академический обмен",                  city: "Париж",     lat: 48.8566,  lng: 2.3522   },
   ],
   us: [
-    { id: "p4", slug: "us-work-travel", name: "Work & Travel", description: "Летняя работа для студентов", city: "США", x: 15, y: 38 },
-    { id: "p5", slug: "us-au-pair", name: "Au Pair", description: "Культурный обмен и уход за детьми", city: "США", x: 28, y: 37 },
+    { id: "p4",  slug: "us-work-travel",     name: "Work & Travel",       description: "Летняя работа для студентов",          city: "Нью-Йорк",  lat: 40.7128,  lng: -74.0060 },
+    { id: "p5",  slug: "us-au-pair",         name: "Au Pair",             description: "Культурный обмен и уход за детьми",    city: "Лос-Анджелес", lat: 34.0522, lng: -118.2437 },
   ],
   ca: [
-    { id: "p6", slug: "ca-express-entry", name: "Express Entry", description: "Система иммиграции и ПМЖ", city: "Канада", x: 26, y: 30 }
+    { id: "p6",  slug: "ca-express-entry",   name: "Express Entry",       description: "Система иммиграции и ПМЖ",             city: "Торонто",   lat: 43.6532,  lng: -79.3832 },
   ],
   pl: [
-    { id: "p7", slug: "pl-work-visa", name: "Work Visa", description: "Работа на заводах и складах", city: "Польша", x: 57.5, y: 31 }
+    { id: "p7",  slug: "pl-work-visa",       name: "Work Visa",           description: "Работа на заводах и складах",          city: "Варшава",   lat: 52.2297,  lng: 21.0122  },
   ],
   tr: [
-    { id: "p8", slug: "tr-turkiye-burslari", name: "Türkiye Bursları", description: "Государственная стипендия", city: "Турция", x: 61, y: 43.5 }
+    { id: "p8",  slug: "tr-turkiye-burslari", name: "Türkiye Bursları",   description: "Государственная стипендия",            city: "Анкара",    lat: 39.9334,  lng: 32.8597  },
   ],
   ch: [
-    { id: "p9", slug: "ch-hotel-internship", name: "Hotel Internship", description: "Стажировка в отелях 5*", city: "Швейцария", x: 50.3, y: 36.5 }
+    { id: "p9",  slug: "ch-hotel-internship", name: "Hotel Internship",   description: "Стажировка в отелях 5*",               city: "Женева",    lat: 46.2044,  lng: 6.1432   },
   ],
   at: [
-    { id: "p10", slug: "at-ausbildung", name: "Lehre / Ausbildung", description: "Дуальное обучение в Австрии", city: "Австрия", x: 53.5, y: 35.5 }
+    { id: "p10", slug: "at-ausbildung",       name: "Lehre / Ausbildung", description: "Дуальное обучение в Австрии",          city: "Вена",      lat: 48.2082,  lng: 16.3738  },
   ],
   se: [
-    { id: "p11", slug: "se-study", name: "Studium / Master", description: "Учёба на английском", city: "Швеция", x: 54.5, y: 22 }
+    { id: "p11", slug: "se-study",            name: "Studium / Master",   description: "Учёба на английском",                 city: "Стокгольм", lat: 59.3293,  lng: 18.0686  },
   ],
   no: [
-    { id: "p12", slug: "no-fish-industry", name: "Fish Industry", description: "Рыбные заводы Норвегии", city: "Норвегия", x: 49.5, y: 21 }
+    { id: "p12", slug: "no-fish-industry",    name: "Fish Industry",      description: "Рыбные заводы Норвегии",               city: "Берген",    lat: 60.3913,  lng: 5.3221   },
   ],
   fi: [
-    { id: "p13", slug: "fi-berry-picking", name: "Berry Picking", description: "Сезонный сбор диких ягод", city: "Финляндия", x: 58.5, y: 21 }
+    { id: "p13", slug: "fi-berry-picking",    name: "Berry Picking",      description: "Сезонный сбор диких ягод",             city: "Оулу",      lat: 65.0121,  lng: 25.4651  },
   ],
   cn: [
-    { id: "p14", slug: "cn-csc-scholarship", name: "CSC Scholarship", description: "Стипендия правительства КНР", city: "Китай", x: 75.5, y: 43 },
-    { id: "p15", slug: "cn-teaching-english", name: "Teaching English", description: "Преподавание английского языка", city: "Китай", x: 79.5, y: 40 }
-  ]
+    { id: "p14", slug: "cn-csc-scholarship",  name: "CSC Scholarship",    description: "Стипендия правительства КНР",          city: "Пекин",     lat: 39.9042,  lng: 116.4074 },
+    { id: "p15", slug: "cn-teaching-english", name: "Teaching English",   description: "Преподавание английского языка",       city: "Шанхай",    lat: 31.2304,  lng: 121.4737 },
+  ],
 };
 
-
 const COUNTRY_TRANSLATIONS: Record<string, Record<string, string>> = {
-  de: { ru: "Германия", en: "Germany" },
-  fr: { ru: "Франция", en: "France" },
-  be: { ru: "Бельгия", en: "Belgium" },
-  ch: { ru: "Швейцария", en: "Switzerland" },
-  at: { ru: "Австрия", en: "Austria" },
-  pl: { ru: "Польша", en: "Poland" },
-  cz: { ru: "Чехия", en: "Czechia" },
-  se: { ru: "Швеция", en: "Sweden" },
-  no: { ru: "Норвегия", en: "Norway" },
-  fi: { ru: "Финляндия", en: "Finland" },
-  tr: { ru: "Турция", en: "Turkey" },
-  cn: { ru: "Китай", en: "China" },
-  ca: { ru: "Канада", en: "Canada" },
-  us: { ru: "США", en: "USA" },
+  de: { ru: "Германия",    en: "Germany"      },
+  fr: { ru: "Франция",     en: "France"       },
+  be: { ru: "Бельгия",     en: "Belgium"      },
+  ch: { ru: "Швейцария",   en: "Switzerland"  },
+  at: { ru: "Австрия",     en: "Austria"      },
+  pl: { ru: "Польша",      en: "Poland"       },
+  cz: { ru: "Чехия",       en: "Czechia"      },
+  se: { ru: "Швеция",      en: "Sweden"       },
+  no: { ru: "Норвегия",    en: "Norway"       },
+  fi: { ru: "Финляндия",   en: "Finland"      },
+  tr: { ru: "Турция",      en: "Turkey"       },
+  cn: { ru: "Китай",       en: "China"        },
+  ca: { ru: "Канада",      en: "Canada"       },
+  us: { ru: "США",         en: "USA"          },
 };
 
 const EMBASSY_DATA: Record<string, {
@@ -195,7 +197,7 @@ const EMBASSY_DATA: Record<string, {
       "Бронь авиабилетов и договор аренды жилья или общежития",
       "Две фотографии 5х6 на белом фоне",
     ]
-  }
+  },
 };
 
 export default function HomePage() {
@@ -205,12 +207,9 @@ export default function HomePage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
-  const [hoveredProject, setHoveredProject] = useState<string | null>(null);
-
-  const mapRef = useRef<ReactZoomPanPinchRef>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [focusCountryId, setFocusCountryId] = useState<string | null>(null);
   const [selectedEmbassy, setSelectedEmbassy] = useState<string>("de");
   const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({
     de: {}, fr: {}, ca: {}, us: {}, tr: {}
@@ -230,18 +229,8 @@ export default function HomePage() {
   const handleSearchSelect = (country: typeof COUNTRIES[0]) => {
     setSearchQuery("");
     setSearchResults([]);
-
-    const container = document.getElementById("map-container");
-    if (container && mapRef.current) {
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      const scale = 3.5;
-      const tx = width / 2 - (width * (country.x / 100)) * scale;
-      const ty = height / 2 - (height * (country.y / 100)) * scale;
-      mapRef.current.setTransform(tx, ty, scale, 800, "easeOut");
-      setHoveredCountry(country.id);
-      setTimeout(() => setHoveredCountry(null), 4000);
-    }
+    setFocusCountryId(country.id);
+    setTimeout(() => setFocusCountryId(null), 4500);
   };
 
   useEffect(() => { setMounted(true); }, []);
@@ -260,19 +249,32 @@ export default function HomePage() {
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] flex flex-col overflow-x-hidden">
 
       {/* ─── Hero text ──────────────────────────────────────────── */}
-      <div className="pt-14 px-4 md:px-6">
+      <div className="pt-14 px-4 md:px-6 relative overflow-hidden">
+        {/* Ambient glow blobs */}
+        <div className="absolute -top-20 right-0 w-[35vw] h-[35vw] bg-[var(--accent)] rounded-full blur-[160px] opacity-[0.04] pointer-events-none" />
+        <div className="absolute top-10 left-[10%] w-[25vw] h-[25vw] bg-emerald-400 rounded-full blur-[140px] opacity-[0.03] pointer-events-none" />
+
         <div className="max-w-[1440px] mx-auto py-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
             <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] mb-2">
               {COUNTRIES.length} destinations
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tighter reveal-up">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tighter">
               {text.title1}{" "}
               <span className="text-[var(--accent)]">{text.title2}</span>
             </h1>
-            <p className="mt-2 text-sm text-[var(--muted)] max-w-[52ch] reveal-up delay-100">{text.subtitle}</p>
-          </div>
-          <div className="flex items-center gap-3 text-[13px] font-medium reveal-up delay-200">
+            <p className="mt-2 text-sm text-[var(--muted)] max-w-[52ch]">{text.subtitle}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-3 text-[13px] font-medium"
+          >
             <Link href="/programs"
               className="px-4 py-2 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/30 hover:bg-[var(--accent-dim)] transition-all text-[var(--muted)] hover:text-[var(--accent)]">
               {navText.programs}
@@ -281,20 +283,20 @@ export default function HomePage() {
               className="px-4 py-2 rounded-xl bg-[var(--foreground)] text-[var(--background)] hover:opacity-85 transition-all">
               {navText.estimator}
             </Link>
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* ─── Interactive Map ─────────────────────────────────────── */}
+      {/* ─── Interactive 3D Globe ────────────────────────────────── */}
       <div className="flex-1 px-4 md:px-6 pb-8">
         <div className="max-w-[1440px] mx-auto">
           <div id="map-container" className="relative h-[60vh] md:h-[70vh] min-h-[480px] rounded-3xl border border-[var(--border)] overflow-hidden bg-[var(--card)] shadow-[0_20px_60px_-20px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)]">
-            
+
             {/* Search Country Floating Widget */}
             <div className="absolute top-4 left-4 z-50 w-64 md:w-72">
               <div className="relative">
                 <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
-                <input 
+                <input
                   type="text"
                   placeholder="Поиск страны..."
                   value={searchQuery}
@@ -346,155 +348,20 @@ export default function HomePage() {
               )}
             </div>
 
-            <TransformWrapper
-              ref={mapRef}
-              initialScale={1} minScale={1} maxScale={6}
-              centerZoomedOut doubleClick={{ disabled: false }} wheel={{ step: 0.1 }}
-            >
-              {({ zoomIn, zoomOut, resetTransform, state }) => {
-                const scale = state.scale;
-                return (
-                  <>
-                    {/* Zoom controls */}
-                    <div className="absolute top-4 right-4 z-50 flex flex-col gap-1.5">
-                      {[
-                        { icon: <Plus size={14} />, action: zoomIn },
-                        { icon: <Minus size={14} />, action: zoomOut },
-                        { icon: <RotateCcw size={12} />, action: resetTransform },
-                      ].map(({ icon, action }, i) => (
-                        <button key={i} onClick={() => action()}
-                          className="w-8 h-8 rounded-xl glass border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--accent)]/30 transition-all">
-                          {icon}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Scale hint */}
-                    <div className="absolute bottom-4 left-4 z-50">
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[var(--border)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse-dot" />
-                        <span className="text-[11px] font-medium text-[var(--muted)]">
-                          {scale > 1.8 ? "Видны проекты" : "Приблизьтесь для деталей"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <TransformComponent
-                      wrapperStyle={{ width: "100%", height: "100%" }}
-                      contentStyle={{ width: "100%", height: "100%" }}
-                    >
-                      <div className="relative w-full h-full min-h-[480px] md:min-h-[600px]">
-                        {/* World map bg */}
-                        <div className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-                          style={{
-                            opacity: scale > 1.8 ? 0 : (theme === "dark" ? 0.12 : 0.2),
-                            backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`,
-                            backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat",
-                            filter: theme === "dark" ? "invert(1)" : "none",
-                          }} />
-
-                        {/* Detailed map */}
-                        <div className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-                          style={{
-                            opacity: scale > 1.8 ? (theme === "dark" ? 0.2 : 0.3) : 0,
-                            backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')`,
-                            backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat",
-                            filter: theme === "dark" ? "invert(1) hue-rotate(180deg)" : "none",
-                          }} />
-
-                        {/* SVG connection lines */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
-                          {CONNECTIONS.map(([id1, id2], i) => {
-                            const c1 = COUNTRIES.find((c) => c.id === id1);
-                            const c2 = COUNTRIES.find((c) => c.id === id2);
-                            if (!c1 || !c2) return null;
-                            const isHot = hoveredCountry === id1 || hoveredCountry === id2;
-                            return (
-                              <line key={i}
-                                x1={`${c1.x}%`} y1={`${c1.y}%`} x2={`${c2.x}%`} y2={`${c2.y}%`}
-                                className="transition-all duration-400"
-                                stroke={isHot ? "rgba(16,185,129,0.6)" : "rgba(107,114,128,0.18)"}
-                                strokeWidth={isHot ? "1.5" : "0.8"}
-                                style={{ filter: isHot ? "drop-shadow(0 0 4px rgba(16,185,129,0.4))" : "none" }}
-                              />
-                            );
-                          })}
-                        </svg>
-
-                        {/* Country nodes */}
-                        {COUNTRIES.map((country) => {
-                          const isHov = hoveredCountry === country.id;
-                          return (
-                            <div key={country.id}
-                              className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer group transition-all duration-300 ${scale > 2 ? "opacity-20 pointer-events-none" : "opacity-100"} ${isHov ? "z-50" : "z-20"}`}
-                              style={{ left: `${country.x}%`, top: `${country.y}%` }}
-                              onMouseEnter={() => setHoveredCountry(country.id)}
-                              onMouseLeave={() => setHoveredCountry(null)}
-                              onClick={(e) => { e.stopPropagation(); router.push(`/countries/${country.id}`); }}
-                            >
-                              {/* Hit area */}
-                              <div className="absolute w-14 h-14 rounded-full z-30" />
-
-                              {/* Glow ring */}
-                              <div className={`absolute w-10 h-10 rounded-full bg-[var(--accent)]/15 blur-md transition-all duration-300 ${isHov ? "scale-150 opacity-100" : "scale-0 opacity-0"}`} />
-
-                              {/* Node */}
-                              <div className={`relative w-2.5 h-2.5 rounded-full border transition-all duration-300 ${isHov
-                                ? "bg-[var(--accent)] border-[var(--accent)] scale-150 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                                : "bg-[var(--muted)]/40 border-[var(--border)] group-hover:bg-[var(--muted)] group-hover:scale-125"}`} />
-
-                              {/* Label + tooltip */}
-                              <div className={`absolute flex flex-col ${country.labelClass || "top-5 items-center"} transition-all duration-300 ${isHov ? "opacity-100 scale-105" : "opacity-60"}`}>
-                                <span className={`text-[11px] font-semibold whitespace-nowrap px-1.5 py-0.5 rounded bg-[var(--background)]/70 backdrop-blur-sm ${isHov ? "text-[var(--foreground)]" : "text-[var(--muted)]"}`}>
-                                  {country.name}
-                                </span>
-                                <div className={`px-2.5 py-1.5 rounded-xl glass border border-[var(--border)] flex flex-col gap-0.5 whitespace-nowrap transition-all duration-300 overflow-hidden ${isHov ? "max-h-16 opacity-100 mt-1" : "max-h-0 opacity-0 h-0"}`}>
-                                  <span className="text-[10px] text-[var(--muted)] flex items-center justify-between gap-3">
-                                    <strong className="text-[var(--foreground)]">{country.programs}</strong>
-                                    {text.programsCount}
-                                  </span>
-                                  <span className="text-[10px] text-[var(--accent)]">
-                                    {PROJECTS[country.id]?.length || 0} проектов
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                        {/* Project nodes (zoomed) */}
-                        {scale > 1.8 && Object.entries(PROJECTS).map(([countryId, projects]) =>
-                          projects.map((proj) => {
-                            const isHov = hoveredProject === proj.id;
-                            return (
-                              <div key={proj.id}
-                                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer z-40 transition-all duration-500"
-                                style={{ left: `${proj.x}%`, top: `${proj.y}%`, opacity: scale > 2 ? 1 : 0 }}
-                                onMouseEnter={() => setHoveredProject(proj.id)}
-                                onMouseLeave={() => setHoveredProject(null)}
-                                onClick={(e) => { e.stopPropagation(); router.push(`/programs/${proj.slug}`); }}
-                              >
-                                <div className="absolute w-10 h-10 rounded-full z-30" />
-                                <div className={`relative w-2 h-2 rounded-full bg-[var(--accent)] border border-[var(--background)] transition-all duration-300 ${isHov ? "scale-175" : "animate-pulse-dot"}`} />
-                                <div className={`absolute top-3.5 flex flex-col items-center transition-all duration-300 ${isHov ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                                  <div className="mt-1 p-2.5 rounded-xl glass border border-[var(--accent)]/20 flex flex-col gap-0.5 whitespace-nowrap z-50 shadow-xl">
-                                    <span className="text-[11px] font-bold text-[var(--foreground)]">{proj.name}</span>
-                                    <span className="text-[10px] text-[var(--muted)]">{proj.description}</span>
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--accent)] mt-0.5">
-                                      <MapPin size={8} className="inline mr-0.5" />{proj.city}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </TransformComponent>
-                  </>
-                );
-              }}
-            </TransformWrapper>
+            {/* 3D Globe */}
+            {mounted && (
+              <WorldGlobe
+                countries={COUNTRIES}
+                projects={PROJECTS}
+                countryTranslations={COUNTRY_TRANSLATIONS}
+                lang={lang}
+                theme={theme}
+                onCountryClick={(id) => router.push(`/countries/${id}`)}
+                onProjectClick={(slug) => router.push(`/programs/${slug}`)}
+                focusCountryId={focusCountryId}
+                programsLabel={text.programsCount}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -590,10 +457,10 @@ export default function HomePage() {
 
                   {/* Progress bar */}
                   <div className="w-full bg-[var(--border)] h-1.5 rounded-full overflow-hidden mb-6">
-                    <div 
-                      className="bg-[var(--accent)] h-full transition-all duration-500" 
-                      style={{ 
-                        width: `${(Object.values(checkedItems[selectedEmbassy] || {}).filter(Boolean).length / EMBASSY_DATA[selectedEmbassy].checklist.length) * 100}%` 
+                    <div
+                      className="bg-[var(--accent)] h-full transition-all duration-500"
+                      style={{
+                        width: `${(Object.values(checkedItems[selectedEmbassy] || {}).filter(Boolean).length / EMBASSY_DATA[selectedEmbassy].checklist.length) * 100}%`
                       }}
                     />
                   </div>
@@ -603,12 +470,12 @@ export default function HomePage() {
                     {EMBASSY_DATA[selectedEmbassy].checklist.map((item, idx) => {
                       const isChecked = !!(checkedItems[selectedEmbassy] && checkedItems[selectedEmbassy][idx]);
                       return (
-                        <div 
+                        <div
                           key={idx}
                           onClick={() => toggleChecklist(selectedEmbassy, idx)}
                           className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer select-none transition-all ${
-                            isChecked 
-                              ? "bg-[var(--accent-dim)]/20 border-[var(--accent)]/30 text-[var(--foreground)]" 
+                            isChecked
+                              ? "bg-[var(--accent-dim)]/20 border-[var(--accent)]/30 text-[var(--foreground)]"
                               : "border-[var(--border)] hover:border-[var(--accent)]/20 hover:bg-[var(--card)] text-[var(--muted)]"
                           }`}
                         >
