@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Globe, Menu, X, Compass, Map, BookOpen, Calculator } from "lucide-react";
+import { LogoMark } from "./LogoMark";
 
 export default function NavbarRouterDom() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +37,7 @@ export default function NavbarRouterDom() {
         {/* Logo */}
         <NavLink to="/home" className="flex items-center gap-2 group">
           <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-            <Globe size={14} className="text-white" strokeWidth={2.5} />
+            <LogoMark size={14} className="text-white" />
           </div>
           <span className="font-extrabold text-[14px] tracking-tight text-[var(--foreground)]">
             WorldBridge

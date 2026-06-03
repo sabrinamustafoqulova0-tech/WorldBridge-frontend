@@ -8,7 +8,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useAuthStore } from "../../store/authStore";
-import { Globe, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { LogoMark } from "../../components/LogoMark";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, "Минимум 2 символа"),
@@ -79,7 +80,7 @@ function RegisterForm() {
 
         <div className="relative flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <Globe size={16} className="text-white" strokeWidth={2.5} />
+            <LogoMark size={16} className="text-white" />
           </div>
           <span className="font-bold text-lg tracking-tight">WorldBridge</span>
         </div>
@@ -119,7 +120,7 @@ function RegisterForm() {
       <div className="flex flex-col justify-center px-6 md:px-16 xl:px-24 py-16">
         <div className="lg:hidden flex items-center gap-2 mb-12">
           <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <Globe size={13} className="text-white" strokeWidth={2.5} />
+            <LogoMark size={13} className="text-white" />
           </div>
           <span className="font-bold tracking-tight">WorldBridge</span>
         </div>

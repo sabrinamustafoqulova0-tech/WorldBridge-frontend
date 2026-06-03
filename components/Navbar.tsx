@@ -8,7 +8,8 @@ import { useAuthStore } from "../store/authStore";
 import { useLangStore } from "../store/langStore";
 import { useAIConsultantStore } from "../store/aiConsultantStore";
 import { translations } from "../locales/translations";
-import { Globe, Moon, Sun, User, LogOut, Sparkles, Menu, X } from "lucide-react";
+import { Moon, Sun, User, LogOut, Sparkles, Menu, X, Settings } from "lucide-react";
+import { LogoMark } from "./LogoMark";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -62,7 +63,7 @@ export default function Navbar() {
       {/* Brand Logo */}
       <Link href="/" className="flex items-center gap-2 group shrink-0">
         <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center transition-transform group-hover:scale-110">
-          <Globe size={13} className="text-white" strokeWidth={2.5} />
+          <LogoMark size={14} className="text-white" />
         </div>
         <span className="font-bold text-[14px] tracking-tight">WorldBridge</span>
       </Link>
@@ -122,6 +123,16 @@ export default function Navbar() {
           <>
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
+                {/* Admin panel button — only for admins */}
+                {user?.is_admin && (
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-[12px] font-bold hover:bg-violet-500/15 transition-all"
+                  >
+                    <Settings size={11} />
+                    Admin
+                  </Link>
+                )}
                 <Link
                   href="/profile"
                   className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"

@@ -8,7 +8,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useAuthStore } from "../../store/authStore";
-import { Globe, ArrowRight, MapPin, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, MapPin, Users, TrendingUp } from "lucide-react";
+import { LogoMark } from "../../components/LogoMark";
 
 const loginSchema = z.object({
   email: z.string().email("Некорректный email"),
@@ -77,7 +78,7 @@ function LoginForm() {
         {/* Logo */}
         <div className="relative flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <Globe size={16} className="text-white" strokeWidth={2.5} />
+            <LogoMark size={16} className="text-white" />
           </div>
           <span className="font-bold text-lg tracking-tight">WorldBridge</span>
         </div>
@@ -115,7 +116,7 @@ function LoginForm() {
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-2 mb-12">
           <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <Globe size={13} className="text-white" strokeWidth={2.5} />
+            <LogoMark size={13} className="text-white" />
           </div>
           <span className="font-bold tracking-tight">WorldBridge</span>
         </div>

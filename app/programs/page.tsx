@@ -11,6 +11,7 @@ import {
   CalendarDays, Banknote, MapPin, AlertCircle,
 } from "lucide-react";
 import AuthGateModal from "../../components/AuthGateModal";
+import { CountryFlag } from "../../components/CountryFlag";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -36,38 +37,23 @@ interface Program {
 
 // ─── Static maps ────────────────────────────────────────────────────────────
 
-const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
-  de: { flag: "🇩🇪", name: "Германия" },
-  fr: { flag: "🇫🇷", name: "Франция" },
-  be: { flag: "🇧🇪", name: "Бельгия" },
-  ch: { flag: "🇨🇭", name: "Швейцария" },
-  at: { flag: "🇦🇹", name: "Австрия" },
-  pl: { flag: "🇵🇱", name: "Польша" },
-  cz: { flag: "🇨🇿", name: "Чехия" },
-  se: { flag: "🇸🇪", name: "Швеция" },
-  no: { flag: "🇳🇴", name: "Норвегия" },
-  fi: { flag: "🇫🇮", name: "Финляндия" },
-  tr: { flag: "🇹🇷", name: "Турция" },
-  cn: { flag: "🇨🇳", name: "Китай" },
-  ca: { flag: "🇨🇦", name: "Канада" },
-  us: { flag: "🇺🇸", name: "США" },
-};
-
 const CATEGORY_CONFIG: Record<string, {
   label: string;
   color: string;
   dot: string;
+  placeholder: string;
+  emoji: string;
 }> = {
-  STUDIUM:     { label: "Обучение",        color: "text-sky-600 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950 dark:border-sky-800",     dot: "bg-sky-500" },
-  ARBEIT:      { label: "Работа",          color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950 dark:border-emerald-800", dot: "bg-emerald-500" },
-  AUSBILDUNG:  { label: "Аусбильдунг",     color: "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-950 dark:border-violet-800",    dot: "bg-violet-500" },
-  AU_PAIR:     { label: "Au Pair",         color: "text-rose-600 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-950 dark:border-rose-800",           dot: "bg-rose-500" },
-  INTERNSHIP:  { label: "Стажировка",      color: "text-orange-600 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950 dark:border-orange-800",    dot: "bg-orange-500" },
-  VOLUNTEERING:{ label: "Волонтерство",    color: "text-teal-600 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-950 dark:border-teal-800",         dot: "bg-teal-500" },
-  FSJ:         { label: "FSJ",             color: "text-teal-600 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-950 dark:border-teal-800",         dot: "bg-teal-500" },
-  IMMIGRATION: { label: "Иммиграция",      color: "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800",            dot: "bg-red-500" },
-  SCHULE:      { label: "Школьный обмен",  color: "text-indigo-600 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-950 dark:border-indigo-800",   dot: "bg-indigo-500" },
-  LANGUAGE:    { label: "Языковые курсы",  color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950 dark:border-amber-800",       dot: "bg-amber-500" },
+  STUDIUM:     { label: "Обучение",        color: "text-sky-600 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950 dark:border-sky-800",                          dot: "bg-sky-500",     placeholder: "bg-gradient-to-br from-sky-100 to-sky-200 dark:from-sky-950 dark:to-sky-900",          emoji: "🎓" },
+  ARBEIT:      { label: "Работа",          color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950 dark:border-emerald-800",  dot: "bg-emerald-500", placeholder: "bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-950 dark:to-emerald-900", emoji: "💼" },
+  AUSBILDUNG:  { label: "Аусбильдунг",     color: "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-950 dark:border-violet-800",       dot: "bg-violet-500",  placeholder: "bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-950 dark:to-violet-900",  emoji: "🔧" },
+  AU_PAIR:     { label: "Au Pair",         color: "text-rose-600 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-950 dark:border-rose-800",                   dot: "bg-rose-500",    placeholder: "bg-gradient-to-br from-rose-100 to-rose-200 dark:from-rose-950 dark:to-rose-900",          emoji: "🏠" },
+  INTERNSHIP:  { label: "Стажировка",      color: "text-orange-600 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950 dark:border-orange-800",       dot: "bg-orange-500",  placeholder: "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-950 dark:to-orange-900",  emoji: "📋" },
+  VOLUNTEERING:{ label: "Волонтерство",    color: "text-teal-600 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-950 dark:border-teal-800",                   dot: "bg-teal-500",    placeholder: "bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-950 dark:to-teal-900",          emoji: "🌱" },
+  FSJ:         { label: "FSJ",             color: "text-teal-600 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-950 dark:border-teal-800",                   dot: "bg-teal-500",    placeholder: "bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-950 dark:to-teal-900",          emoji: "🤝" },
+  IMMIGRATION: { label: "Иммиграция",      color: "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800",                         dot: "bg-red-500",     placeholder: "bg-gradient-to-br from-red-100 to-red-200 dark:from-red-950 dark:to-red-900",              emoji: "✈️" },
+  SCHULE:      { label: "Школьный обмен",  color: "text-indigo-600 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-950 dark:border-indigo-800",      dot: "bg-indigo-500",  placeholder: "bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-950 dark:to-indigo-900",  emoji: "📚" },
+  LANGUAGE:    { label: "Языковые курсы",  color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950 dark:border-amber-800",             dot: "bg-amber-500",   placeholder: "bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-950 dark:to-amber-900",      emoji: "🗣️" },
 };
 
 const CATEGORY_LABELS_RU: Record<string, string> = {
@@ -91,6 +77,8 @@ function getCategoryConfig(cat: string) {
     label: cat,
     color: "text-[var(--muted)] bg-[var(--card)] border-[var(--border)]",
     dot: "bg-[var(--muted)]",
+    placeholder: "bg-gradient-to-br from-[var(--border)] to-[var(--card)]",
+    emoji: "🌍",
   };
 }
 
@@ -168,7 +156,6 @@ function ProgramCard({
   onToggleFav: (e: React.MouseEvent, id: number) => void;
 }) {
   const cat = getCategoryConfig(program.category);
-  const country = program.country_slug ? COUNTRY_INFO[program.country_slug] : null;
   const pros = getTopPros(program.pros, 2);
   const duration = formatDuration(program.duration_months);
   const age = formatAge(program.min_age, program.max_age);
@@ -185,40 +172,57 @@ function ProgramCard({
         dark:hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)]
         transition-all duration-200 flex flex-col"
     >
-      {/* ── Header ───────────────────────────────────── */}
-      <div className="px-5 pt-5 pb-4">
-        {/* Country + Category row */}
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 min-w-0">
-            {country && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--muted)] shrink-0">
-                <span className="text-base leading-none">{country.flag}</span>
-                {country.name}
-              </span>
-            )}
-            {country && <span className="text-[var(--border)] select-none">·</span>}
-            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border truncate ${cat.color}`}>
-              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cat.dot}`} />
-              {cat.label}
-            </span>
+      {/* ── Cover image ──────────────────────────────── */}
+      <div className="relative h-44 overflow-hidden shrink-0">
+        {program.cover_image_url ? (
+          <img
+            src={program.cover_image_url}
+            alt={program.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className={`w-full h-full flex items-center justify-center ${cat.placeholder}`}>
+            <span className="text-4xl opacity-60">{cat.emoji}</span>
           </div>
+        )}
 
-          {/* Favourite button */}
-          {isAuthenticated && (
-            <button
-              onClick={e => onToggleFav(e, program.id)}
-              aria-label={isFav ? "Убрать из избранного" : "В избранное"}
-              className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-colors
-                ${isFav
-                  ? "border-rose-400/50 text-rose-500 bg-rose-50 dark:bg-rose-950"
-                  : "border-[var(--border)] text-[var(--muted)] hover:border-rose-400/40 hover:text-rose-500"
-                }`}
-            >
-              <Heart size={12} fill={isFav ? "currentColor" : "none"} />
-            </button>
-          )}
+        {/* Gradient overlay at bottom for readability */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
+
+        {/* Category badge overlaid on image */}
+        <div className="absolute top-3 left-3">
+          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm bg-[var(--card)]/80 truncate ${cat.color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cat.dot}`} />
+            {cat.label}
+          </span>
         </div>
 
+        {/* Favourite button overlaid on image */}
+        {isAuthenticated && (
+          <button
+            onClick={e => onToggleFav(e, program.id)}
+            aria-label={isFav ? "Убрать из избранного" : "В избранное"}
+            className={`absolute top-3 right-3 w-8 h-8 rounded-xl border backdrop-blur-sm flex items-center justify-center shrink-0 transition-colors
+              ${isFav
+                ? "border-rose-400/50 text-rose-500 bg-rose-50/90 dark:bg-rose-950/90"
+                : "border-white/20 text-white bg-black/20 hover:bg-black/40"
+              }`}
+          >
+            <Heart size={13} fill={isFav ? "currentColor" : "none"} />
+          </button>
+        )}
+
+        {/* Country flag overlaid bottom-left */}
+        {program.country_slug && (
+          <div className="absolute bottom-3 left-3">
+            <CountryFlag slug={program.country_slug} showName size="sm"
+              className="bg-black/30 backdrop-blur-sm rounded-full px-2 py-0.5 [&_span]:text-white/90" />
+          </div>
+        )}
+      </div>
+
+      {/* ── Header ───────────────────────────────────── */}
+      <div className="px-5 pt-4 pb-3">
         {/* Title */}
         <h3 className="text-[15px] font-bold tracking-tight text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors leading-snug mb-2 line-clamp-2">
           {program.title}

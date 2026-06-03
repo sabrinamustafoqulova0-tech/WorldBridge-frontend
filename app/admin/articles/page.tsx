@@ -1,29 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Plus,
   Edit2,
   Trash2,
-  Eye,
-  Globe,
   CheckCircle,
   XCircle,
-  FileText,
   Search,
   X,
-  Upload,
   ExternalLink,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
 import api from "../../../lib/api";
 import { useAuthStore } from "../../../store/authStore";
-import { useLangStore } from "../../../store/langStore";
-import { translations } from "../../../locales/translations";
 
 interface Article {
   id: number;
@@ -55,11 +47,7 @@ function transliterate(text: string): string {
 }
 
 export default function AdminArticlesPage() {
-  const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const { lang } = useLangStore();
-  const navText = translations[lang]?.nav || translations.ru.nav;
-
+  const { user, isAuthenticated } = useAuthStore();
   // State
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,12 +74,6 @@ export default function AdminArticlesPage() {
   const [errorMsg, setErrorMsg] = useState("");
 
   // Direct access control
-  useEffect(() => {
-    if (!authLoading && (!isAuthenticated || !user || !user.is_admin)) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, user, authLoading]);
-
   // Load articles
   const loadArticles = async () => {
     try {
@@ -179,12 +161,12 @@ export default function AdminArticlesPage() {
       setErrorMsg("");
 
       const payload = {
-        title,
-        slug,
-        excerpt,
-        content,
-        cover_image_url: coverUrl || null,
-        is_published: isPublished
+        title: title.trim(),
+        slug: slug.trim(),
+        excerpt: excerpt.trim(),
+        content: content.trim(),
+        cover_image_url: coverUrl.trim() || null,
+        is_published: isPublished,
       };
 
       if (editId) {
@@ -196,7 +178,19 @@ export default function AdminArticlesPage() {
       setIsDrawerOpen(false);
       loadArticles();
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || "Произошла ошибка при сохранении статьи.");
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        const messages = detail.map((d: any) => {
+          const field = Array.isArray(d.loc) ? d.loc.filter((x: any) => x !== "body").join(" → ") : "";
+          const msg = d.msg || String(d);
+          return field ? `${field}: ${msg}` : msg;
+        });
+        setErrorMsg(messages.join("\n"));
+      } else if (typeof detail === "string") {
+        setErrorMsg(detail);
+      } else {
+        setErrorMsg(`Ошибка ${err.response?.status || ""}: Проверьте все обязательные поля.`);
+      }
     } finally {
       setSaving(false);
     }
@@ -214,34 +208,9 @@ export default function AdminArticlesPage() {
     }
   };
 
-  if (authLoading || !isAuthenticated || !user || !user.is_admin) {
-    return (
-      <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] flex justify-center items-center">
-        <div className="w-6 h-6 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col pb-24">
-      {/* Navbar */}
-      <nav className="fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-5 md:px-8 glass border-b border-[var(--border)]">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
-            <ArrowLeft size={14} /> На сайт
-          </Link>
-          <div className="h-4 w-px bg-[var(--border)]"></div>
-          <span className="font-bold text-[14px] tracking-tight">WorldBridge CMS</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
-            Admin
-          </span>
-        </div>
-      </nav>
-
-      {/* Main Admin layout */}
-      <main className="pt-24 px-5 md:px-8 max-w-6xl mx-auto w-full flex-1 space-y-6">
+    <div className="min-h-full pb-16">
+      <main className="pt-8 px-6 md:px-8 max-w-5xl mx-auto w-full space-y-6">
         
         {/* Header Block */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -386,142 +355,127 @@ export default function AdminArticlesPage() {
         </div>
       </main>
 
-      {/* Slide-out Drawer Panel (HTML form) */}
+      {/* Drawer */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop blur overlay */}
+        <div className="fixed inset-0 z-[100]">
+          {/* Backdrop */}
           <div
             onClick={() => setIsDrawerOpen(false)}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           />
 
-          <div className="absolute inset-y-0 right-0 max-w-2xl w-full flex pl-10">
-            <div className="w-screen max-w-2xl transform bg-[var(--background)] border-l border-[var(--border)] shadow-2xl flex flex-col animate-slide-left">
-              
-              {/* Drawer Header */}
-              <div className="px-6 py-5 border-b border-[var(--border)] flex items-center justify-between glass">
-                <div className="space-y-0.5">
-                  <h2 className="text-base font-bold">
-                    {editId ? "Редактировать статью" : "Создать новую статью"}
-                  </h2>
-                  <p className="text-[10px] text-[var(--muted)]">Заполните поля и нажмите сохранить для публикации.</p>
-                </div>
-                <button
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)] hover:text-[var(--foreground)]"
-                >
-                  <X size={14} />
-                </button>
+          {/* Panel — full height, slides from right */}
+          <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-[var(--background)] border-l border-[var(--border)] shadow-2xl flex flex-col animate-slide-left">
+
+            {/* Header — fixed, never scrolls */}
+            <div className="shrink-0 px-6 py-4 border-b border-[var(--border)] bg-[var(--background)] flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold">
+                  {editId ? "Редактировать статью" : "Создать статью"}
+                </h2>
+                <p className="text-[11px] text-[var(--muted)] mt-0.5">Заполните поля и нажмите «Сохранить».</p>
               </div>
+              <button
+                onClick={() => setIsDrawerOpen(false)}
+                className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
+              >
+                <X size={15} />
+              </button>
+            </div>
 
-              {/* Drawer Scrollable Body Form */}
-              <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
-                {errorMsg && (
-                  <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-medium">
-                    {errorMsg}
-                  </div>
-                )}
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto">
+              <form onSubmit={handleSave} id="art-form">
+                <div className="px-6 py-5 space-y-5">
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Заголовок *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Например: Как получить студенческую визу в Германию"
-                    value={title}
-                    onChange={handleTitleChange}
-                    className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
-                  />
-                </div>
+                  {errorMsg && (
+                    <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-medium whitespace-pre-wrap">
+                      {errorMsg}
+                    </div>
+                  )}
 
-                <div className="grid grid-cols-2 gap-4">
+                  {/* Заголовок */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">ЧПУ (Slug) *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="studencheskaya-viza"
-                      value={slug}
-                      onChange={(e) => setSlug(transliterate(e.target.value))}
-                      className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs font-mono text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
-                    />
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Заголовок *</label>
+                    <input type="text" required value={title} onChange={handleTitleChange}
+                      placeholder="Например: Как получить визу в Германию"
+                      className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]" />
                   </div>
 
+                  {/* Slug + Обложка */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Slug *</label>
+                      <input type="text" required value={slug}
+                        onChange={(e) => setSlug(transliterate(e.target.value))}
+                        placeholder="viza-v-germaniyu"
+                        className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs font-mono text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Фото (URL)</label>
+                      <input type="text" value={coverUrl}
+                        onChange={(e) => setCoverUrl(e.target.value)}
+                        placeholder="https://images.unsplash.com/..."
+                        className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]" />
+                    </div>
+                  </div>
+
+                  {/* Cover preview */}
+                  {coverUrl && (
+                    <div className="w-full h-32 rounded-xl overflow-hidden border border-[var(--border)]">
+                      <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+
+                  {/* Краткое описание */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Обложка (URL)</label>
-                    <input
-                      type="url"
-                      placeholder="https://images.unsplash.com/..."
-                      value={coverUrl}
-                      onChange={(e) => setCoverUrl(e.target.value)}
-                      className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
-                    />
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Краткое описание *</label>
+                    <textarea required rows={3} value={excerpt} onChange={(e) => setExcerpt(e.target.value)}
+                      placeholder="Краткое описание для карточки статьи..."
+                      className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]" />
                   </div>
-                </div>
 
-                {coverUrl && (
-                  <div className="w-full h-32 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--border)]/10">
-                    <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" />
+                  {/* Содержимое */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                      Содержимое * <span className="normal-case font-normal opacity-60">(HTML)</span>
+                    </label>
+                    <textarea required rows={12} value={content} onChange={(e) => setContent(e.target.value)}
+                      placeholder="<p>Текст статьи...</p>"
+                      className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs font-mono text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]" />
                   </div>
-                )}
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Краткое превью *</label>
-                  <textarea
-                    required
-                    rows={2}
-                    placeholder="Краткое описание статьи для списков и карточек поиска..."
-                    value={excerpt}
-                    onChange={(e) => setExcerpt(e.target.value)}
-                    className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Содержимое (HTML) *</label>
-                  <textarea
-                    required
-                    rows={12}
-                    placeholder="<p>Текст статьи в HTML разметке...</p>"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs font-mono text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
-                  />
-                </div>
-
-                {/* Published Toggle checkbox */}
-                <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <span className="text-xs font-bold">Опубликовать статью</span>
-                    <p className="text-[10px] text-[var(--muted)]">Сделайте статью видимой для всех пользователей.</p>
+                  {/* Публикация */}
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+                    <div>
+                      <p className="text-xs font-bold">Опубликовать</p>
+                      <p className="text-[10px] text-[var(--muted)] mt-0.5">Статья будет видна всем пользователям.</p>
+                    </div>
+                    <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)}
+                      className="w-4 h-4 accent-[var(--accent)]" />
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={isPublished}
-                    onChange={(e) => setIsPublished(e.target.checked)}
-                    className="w-4 h-4 rounded accent-[var(--accent)]"
-                  />
-                </div>
 
-                {/* Submit Controls Footer */}
-                <div className="pt-4 border-t border-[var(--border)] flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsDrawerOpen(false)}
-                    className="px-4 py-2 rounded-xl border border-[var(--border)] text-xs font-semibold hover:bg-[var(--card)] transition-all"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-6 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-emerald-500 transition-all disabled:opacity-50"
-                  >
-                    {saving ? "Сохранение..." : "Сохранить"}
-                  </button>
                 </div>
               </form>
+            </div>
 
+            {/* Footer — fixed at bottom, always visible */}
+            <div className="shrink-0 px-6 py-4 border-t border-[var(--border)] bg-[var(--background)] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="px-4 py-2 rounded-xl border border-[var(--border)] text-xs font-semibold hover:bg-[var(--card)] transition-all"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                form="art-form"
+                disabled={saving}
+                className="px-6 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-emerald-500 transition-all disabled:opacity-50 shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
+              >
+                {saving ? "Сохранение..." : editId ? "Обновить" : "Создать статью"}
+              </button>
             </div>
           </div>
         </div>

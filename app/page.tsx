@@ -8,9 +8,9 @@ import { useLangStore } from "../store/langStore";
 import { translations } from "../locales/translations";
 import api from "../lib/api";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { 
+import { LogoMark } from "../components/LogoMark";
+import {
   ArrowRight,
-  Globe,
   MapPin,
   TrendingUp,
   Shield,
@@ -97,13 +97,13 @@ const POPULAR_COUNTRIES = [
 ];
 
 const HERO_SLIDES = [
-  "https://franco.crimealib.ru/wp-content/uploads/2024/04/puteshestviya-1.jpg",
-  "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=900&q=80",
+  "https://studinter.ru/img/own_images/USA/f2decbfef34d89cf57364f9e6385e269.jpeg",
+  "https://dvke.ru/wp-content/uploads/2016/06/photo.jpg",
+  "https://img.7ya.ru/pub/img/25736/depositphotos_63073591_s-2019.jpg",
+  "https://wucheba.ru/zh-content/uploads/2023/11/16c0597f08676fdc1fe1948d2e4abb11.jpg",
+  "https://alvi-consult.com/images/news/graduation-caps-in-air.jpg",
+  "https://migronium.com/wp-content/uploads/2023/10/obuchenie-za-graniczej-2100x1400.jpg",
+  "https://vlfin.ru/upload/iblock/d7b/d7bb6756fd55d87310196de6aa7c533b.jpg",
 ];
 
 function GlobeViz() {
@@ -162,7 +162,7 @@ export default function LandingPage() {
   const { lang } = useLangStore();
   const [mounted, setMounted] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
-  const [dbStats, setDbStats] = useState({ countries: 47, programs: 2341 });
+  const [dbStats, setDbStats] = useState({ countries: 14, programs: 65 });
 
   const { scrollY } = useScroll();
   
@@ -347,11 +347,7 @@ export default function LandingPage() {
             ))}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
             {/* Floating city chips */}
-            {[
-              { label: "Berlin, DE", pos: "top-8 right-8" },
-              { label: "Toronto, CA", pos: "top-1/2 right-6" },
-              { label: "Prague, CZ", pos: "bottom-20 left-8" },
-            ].map(({ label, pos }) => (
+            {[].map(({ label, pos }) => (
               <div key={label} className={`absolute ${pos} glass rounded-full px-3 py-1.5 flex items-center gap-1.5`}>
                 <MapPin size={10} className="text-[var(--accent)]" />
                 <span className="text-[11px] font-medium text-white/80">{label}</span>
@@ -578,7 +574,7 @@ export default function LandingPage() {
         <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-[var(--accent)] flex items-center justify-center">
-              <Globe size={12} className="text-white" />
+              <LogoMark size={12} className="text-white" />
             </div>
             <span className="font-bold text-sm">WorldBridge</span>
           </div>

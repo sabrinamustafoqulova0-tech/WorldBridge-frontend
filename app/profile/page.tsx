@@ -10,6 +10,7 @@ import {
   Globe, Calculator, Sparkles, BookOpen, Star,
   TrendingUp, Award, Zap, Shield, Target, ChevronRight,
 } from "lucide-react";
+import { CountryFlag } from "../../components/CountryFlag";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -45,12 +46,6 @@ const CATEGORY_LABEL: Record<string, string> = {
   STUDIUM: "Обучение", ARBEIT: "Работа", AUSBILDUNG: "Аусбильдунг",
   AU_PAIR: "Au Pair", INTERNSHIP: "Стажировка", VOLUNTEERING: "Волонтерство",
   FSJ: "FSJ", IMMIGRATION: "Иммиграция", LANGUAGE: "Языковые курсы",
-};
-
-const COUNTRY_FLAG: Record<string, string> = {
-  de: "🇩🇪", fr: "🇫🇷", be: "🇧🇪", ch: "🇨🇭", at: "🇦🇹",
-  pl: "🇵🇱", cz: "🇨🇿", se: "🇸🇪", no: "🇳🇴", fi: "🇫🇮",
-  tr: "🇹🇷", cn: "🇨🇳", ca: "🇨🇦", us: "🇺🇸",
 };
 
 // ─── Achievements config ──────────────────────────────────────────────────────
@@ -403,14 +398,15 @@ export default function ProfilePage() {
               {favorites.slice(0, 6).map(fav => {
                 const catStyle = CATEGORY_STYLE[(fav.program?.category || "").toUpperCase()] || "text-[var(--muted)] bg-transparent border-[var(--border)]";
                 const catLabel = CATEGORY_LABEL[(fav.program?.category || "").toUpperCase()] || fav.program?.category;
-                const flag = fav.program?.country_slug ? COUNTRY_FLAG[fav.program.country_slug] : null;
                 return (
                   <li key={fav.id} className="group">
                     <Link
                       href={`/programs/${fav.program?.slug}`}
                       className="flex items-center gap-3 px-5 py-3.5 hover:bg-[var(--background)] transition-colors"
                     >
-                      {flag && <span className="text-base shrink-0">{flag}</span>}
+                      {fav.program?.country_slug && (
+                        <CountryFlag slug={fav.program.country_slug} size="lg" />
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${catStyle}`}>
