@@ -8,10 +8,11 @@ import api from "../../lib/api";
 import {
   Search, X, Heart, Clock, Languages, UserCheck,
   ArrowRight, SlidersHorizontal, CheckCircle2,
-  CalendarDays, Banknote, MapPin, AlertCircle,
+  CalendarDays, Banknote, MapPin, AlertCircle, Plus, Send, CheckCircle,
 } from "lucide-react";
 import AuthGateModal from "../../components/AuthGateModal";
 import { CountryFlag } from "../../components/CountryFlag";
+import { translations } from "../../locales/translations";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -56,19 +57,7 @@ const CATEGORY_CONFIG: Record<string, {
   LANGUAGE:    { label: "Языковые курсы",  color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950 dark:border-amber-800",             dot: "bg-amber-500",   placeholder: "bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-950 dark:to-amber-900",      emoji: "🗣️" },
 };
 
-const CATEGORY_LABELS_RU: Record<string, string> = {
-  ALL: "Все",
-  STUDIUM: "Обучение",
-  ARBEIT: "Работа",
-  AUSBILDUNG: "Аусбильдунг",
-  AU_PAIR: "Au Pair",
-  INTERNSHIP: "Стажировка",
-  VOLUNTEERING: "Волонтерство",
-  FSJ: "FSJ",
-  IMMIGRATION: "Иммиграция",
-  SCHULE: "Школьный обмен",
-  LANGUAGE: "Языковые курсы",
-};
+// Category labels are sourced from translations[lang].programsList.categories
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -116,25 +105,22 @@ function shortenDeadline(deadline: string | null): string | null {
 
 function CardSkeleton() {
   return (
-    <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden animate-pulse">
+    <div className="card overflow-hidden">
+      <div className="h-44 skeleton rounded-none" />
       <div className="p-5 space-y-3">
         <div className="flex gap-2">
-          <div className="h-5 w-20 bg-[var(--border)] rounded-full" />
-          <div className="h-5 w-16 bg-[var(--border)] rounded-full" />
+          <div className="h-5 w-20 skeleton rounded-full" />
+          <div className="h-5 w-16 skeleton rounded-full" />
         </div>
-        <div className="h-5 w-3/4 bg-[var(--border)] rounded" />
-        <div className="space-y-1.5">
-          <div className="h-3.5 w-full bg-[var(--border)] rounded" />
-          <div className="h-3.5 w-5/6 bg-[var(--border)] rounded" />
+        <div className="h-5 w-3/4 skeleton" />
+        <div className="space-y-2">
+          <div className="h-3.5 w-full skeleton" />
+          <div className="h-3.5 w-5/6 skeleton" />
         </div>
-      </div>
-      <div className="border-t border-[var(--border)] px-5 py-3 space-y-2">
-        <div className="h-3 w-2/3 bg-[var(--border)] rounded" />
-        <div className="h-3 w-1/2 bg-[var(--border)] rounded" />
       </div>
       <div className="border-t border-[var(--border)] px-5 py-3 flex justify-between">
-        <div className="h-5 w-24 bg-[var(--border)] rounded" />
-        <div className="h-5 w-20 bg-[var(--border)] rounded" />
+        <div className="h-4 w-24 skeleton" />
+        <div className="h-4 w-20 skeleton" />
       </div>
     </div>
   );
@@ -148,12 +134,18 @@ function ProgramCard({
   isAuthenticated,
   onCardClick,
   onToggleFav,
+  catLabel,
+  clarifyConditions,
+  lang,
 }: {
   program: Program;
   isFav: boolean;
   isAuthenticated: boolean;
   onCardClick: (slug: string) => void;
   onToggleFav: (e: React.MouseEvent, id: number) => void;
+  catLabel?: string;
+  clarifyConditions?: string;
+  lang?: string;
 }) {
   const cat = getCategoryConfig(program.category);
   const pros = getTopPros(program.pros, 2);
@@ -167,13 +159,10 @@ function ProgramCard({
       role="button"
       tabIndex={0}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onCardClick(program.slug); }}
-      className="group relative bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden cursor-pointer
-        hover:border-[var(--accent)]/40 hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)]
-        dark:hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)]
-        transition-all duration-200 flex flex-col"
+      className="group card-interactive overflow-hidden cursor-pointer flex flex-col"
     >
       {/* ── Cover image ──────────────────────────────── */}
-      <div className="relative h-44 overflow-hidden shrink-0">
+      <div className="relative h-48 overflow-hidden shrink-0 bg-[var(--background-subtle)]">
         {program.cover_image_url ? (
           <img
             src={program.cover_image_url}
@@ -181,65 +170,54 @@ function ProgramCard({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className={`w-full h-full flex items-center justify-center ${cat.placeholder}`}>
-            <span className="text-4xl opacity-60">{cat.emoji}</span>
+          <div className={`absolute inset-0 ${cat.placeholder} flex items-center justify-center`}>
+            <span className="text-7xl opacity-20 select-none">{cat.emoji}</span>
           </div>
         )}
 
-        {/* Gradient overlay at bottom for readability */}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
-
-        {/* Category badge overlaid on image */}
-        <div className="absolute top-3 left-3">
-          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm bg-[var(--card)]/80 truncate ${cat.color}`}>
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cat.dot}`} />
-            {cat.label}
-          </span>
-        </div>
-
-        {/* Favourite button overlaid on image */}
+        {/* Favourite button */}
         {isAuthenticated && (
           <button
             onClick={e => onToggleFav(e, program.id)}
             aria-label={isFav ? "Убрать из избранного" : "В избранное"}
-            className={`absolute top-3 right-3 w-8 h-8 rounded-xl border backdrop-blur-sm flex items-center justify-center shrink-0 transition-colors
+            className={`absolute top-3 right-3 w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 transition-all
               ${isFav
-                ? "border-rose-400/50 text-rose-500 bg-rose-50/90 dark:bg-rose-950/90"
-                : "border-white/20 text-white bg-black/20 hover:bg-black/40"
+                ? "border-rose-200 text-rose-500 bg-white dark:bg-rose-950/80 dark:border-rose-900"
+                : "border-[var(--border)] text-[var(--muted)] bg-white/80 dark:bg-black/30 hover:text-rose-500 hover:border-rose-200"
               }`}
           >
             <Heart size={13} fill={isFav ? "currentColor" : "none"} />
           </button>
         )}
+      </div>
 
-        {/* Country flag overlaid bottom-left */}
+      {/* ── Card header: category + country ──────────── */}
+      <div className="px-4 pt-3.5 pb-0 flex items-center justify-between gap-2">
+        <span className="badge badge-neutral text-[10px] font-semibold">
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cat.dot}`} />
+          {catLabel || cat.label}
+        </span>
         {program.country_slug && (
-          <div className="absolute bottom-3 left-3">
-            <CountryFlag slug={program.country_slug} showName size="sm"
-              className="bg-black/30 backdrop-blur-sm rounded-full px-2 py-0.5 [&_span]:text-white/90" />
-          </div>
+          <CountryFlag slug={program.country_slug} showName size="sm" lang={(lang as "ru" | "en" | "tg") || "ru"} />
         )}
       </div>
 
-      {/* ── Header ───────────────────────────────────── */}
-      <div className="px-5 pt-4 pb-3">
-        {/* Title */}
-        <h3 className="text-[15px] font-bold tracking-tight text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors leading-snug mb-2 line-clamp-2">
+      {/* ── Title + description ───────────────────────── */}
+      <div className="px-4 pt-2.5 pb-3">
+        <h3 className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors leading-snug mb-1.5 line-clamp-2">
           {program.title}
         </h3>
-
-        {/* Short description */}
-        <p className="text-[13px] text-[var(--muted)] leading-relaxed line-clamp-2">
+        <p className="text-xs text-[var(--muted)] leading-relaxed line-clamp-2">
           {program.short_description}
         </p>
       </div>
 
       {/* ── Key benefits ─────────────────────────────── */}
       {pros.length > 0 && (
-        <div className="px-5 pb-4 space-y-1.5">
+        <div className="px-4 pb-3 space-y-1.5">
           {pros.map((p, i) => (
-            <div key={i} className="flex items-start gap-2 text-[12px] text-[var(--muted)]">
-              <CheckCircle2 size={12} className="text-[var(--accent)] shrink-0 mt-0.5" />
+            <div key={i} className="flex items-start gap-1.5 text-xs text-[var(--muted)]">
+              <CheckCircle2 size={11} className="text-[var(--accent)] shrink-0 mt-0.5" />
               <span className="line-clamp-1">{p}</span>
             </div>
           ))}
@@ -247,63 +225,300 @@ function ProgramCard({
       )}
 
       {/* ── Meta row ─────────────────────────────────── */}
-      <div className="mt-auto border-t border-[var(--border)] px-5 py-3 flex flex-wrap gap-x-4 gap-y-1.5">
+      <div className="mt-auto border-t border-[var(--border)] px-4 py-2.5 flex flex-wrap gap-x-3 gap-y-1">
         {duration && (
           <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
-            <Clock size={11} className="text-[var(--accent)]" />
+            <Clock size={10} className="text-[var(--accent)]" />
             {duration}
           </span>
         )}
         {program.language_requirement && (
           <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
-            <Languages size={11} className="text-[var(--accent)]" />
+            <Languages size={10} className="text-[var(--accent)]" />
             {program.language_requirement}
           </span>
         )}
         {age && (
           <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
-            <UserCheck size={11} className="text-[var(--accent)]" />
+            <UserCheck size={10} className="text-[var(--accent)]" />
             {age}
           </span>
         )}
         {program.residence_permit && (
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-sky-400">
-            <MapPin size={11} />
+            <MapPin size={10} />
             ВНЖ
           </span>
         )}
       </div>
 
       {/* ── Footer: salary + deadline ─────────────────── */}
-      <div className="border-t border-[var(--border)] px-5 py-3 flex items-center justify-between gap-3">
+      <div className="border-t border-[var(--border)] px-4 py-2.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
           {program.salary_range ? (
-            <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+            <span className="inline-flex items-center gap-1 text-sm font-bold text-emerald-600 dark:text-emerald-400 truncate">
               <Banknote size={12} className="shrink-0" />
               {program.salary_range}
             </span>
           ) : program.cost ? (
-            <span className="text-[12px] text-[var(--muted)] truncate">{program.cost}</span>
+            <span className="text-xs font-medium text-[var(--foreground)] truncate">{program.cost}</span>
           ) : (
-            <span className="text-[12px] text-[var(--muted)]">Уточняйте условия</span>
+            <span className="text-xs text-[var(--muted)]">{clarifyConditions || "Уточняйте условия"}</span>
           )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           {deadline && (
             <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)] hidden sm:inline-flex">
-              <CalendarDays size={11} />
-              <span className="truncate max-w-[120px]">{deadline}</span>
+              <CalendarDays size={10} />
+              <span className="truncate max-w-[100px]">{deadline}</span>
             </span>
           )}
-          <div className="w-7 h-7 rounded-lg border border-[var(--border)] flex items-center justify-center text-[var(--muted)]
+          <div className="w-6 h-6 rounded-md border border-[var(--border)] flex items-center justify-center text-[var(--muted)]
             group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)]
             transition-colors shrink-0">
-            <ArrowRight size={13} />
+            <ArrowRight size={12} />
           </div>
         </div>
       </div>
     </article>
+  );
+}
+
+// ─── Suggest Modal ───────────────────────────────────────────────────────────
+
+const SUGGEST_COUNTRIES = [
+  "Германия", "Франция", "Бельгия", "Швейцария", "Австрия",
+  "Польша", "Чехия", "Швеция", "Норвегия", "Финляндия",
+  "Китай", "Канада", "США", "Другая",
+];
+
+function SuggestProgramModal({ onClose }: { onClose: () => void }) {
+  const inputCls =
+    "w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--foreground)] " +
+    "focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]";
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const [form, setForm] = useState({
+    submitter_name: "",
+    submitter_email: "",
+    submitter_phone: "",
+    program_title: "",
+    country: "",
+    description: "",
+    official_url: "",
+    extra_info: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [serverError, setServerError] = useState("");
+
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm(prev => ({ ...prev, [k]: e.target.value }));
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (form.submitter_name.trim().length < 2) errs.submitter_name = "Минимум 2 символа";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.submitter_email)) errs.submitter_email = "Неверный email";
+    if (!/^\+?[0-9\s\-\(\)]{7,30}$/.test(form.submitter_phone.trim())) errs.submitter_phone = "Неверный формат";
+    if (form.program_title.trim().length < 3) errs.program_title = "Минимум 3 символа";
+    if (!form.country) errs.country = "Выберите страну";
+    if (form.description.trim().length < 50) errs.description = "Минимум 50 символов";
+    if (form.official_url && !/^https?:\/\//.test(form.official_url.trim()))
+      errs.official_url = "URL должен начинаться с http:// или https://";
+    return errs;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setSubmitting(true);
+    setServerError("");
+    try {
+      await api.post("/suggestions", {
+        submitter_name: form.submitter_name.trim(),
+        submitter_email: form.submitter_email.trim(),
+        submitter_phone: form.submitter_phone.trim(),
+        program_title: form.program_title.trim(),
+        country: form.country,
+        description: form.description.trim(),
+        official_url: form.official_url.trim() || null,
+        extra_info: form.extra_info.trim() || null,
+      });
+      setSuccess(true);
+    } catch (err: any) {
+      const detail = err.response?.data?.detail;
+      if (typeof detail === "string") setServerError(detail);
+      else if (Array.isArray(detail)) setServerError(detail.map((d: any) => d.msg).join("; "));
+      else setServerError("Ошибка при отправке. Попробуйте позже.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    /* Оверлей сам скролится — это единственный надёжный паттерн */
+    <div className="fixed inset-0 z-[200] overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        {/* Backdrop остаётся fixed, не скролится */}
+        <div onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+
+        {/* Панель модалки — естественная высота, без ограничений */}
+        <div className="relative w-full max-w-lg bg-[var(--background)] border border-[var(--border)] rounded-2xl shadow-2xl animate-fade-in overflow-hidden">
+
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between sticky top-0 bg-[var(--background)] z-10">
+            <div>
+              <h2 className="text-base font-bold">Предложить программу</h2>
+              <p className="text-[11px] text-[var(--muted)] mt-0.5">Знаете интересную программу? Расскажите нам!</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)]"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="px-6 py-5">
+            {success ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
+                  <CheckCircle size={32} className="text-[var(--accent)]" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold mb-1">Спасибо!</h3>
+                  <p className="text-sm text-[var(--muted)] max-w-xs">
+                    Ваше предложение отправлено на рассмотрение. Мы изучим его и свяжемся с вами при необходимости.
+                  </p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="mt-2 px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:bg-emerald-500 transition-all"
+                >
+                  Закрыть
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} id="suggest-form" className="space-y-4">
+                {serverError && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs">
+                    {serverError}
+                  </div>
+                )}
+
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)]">Ваши контакты</p>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--muted)]">Имя и фамилия *</label>
+                  <input
+                    type="text" value={form.submitter_name} onChange={set("submitter_name")}
+                    placeholder="Иван Иванов" className={inputCls} />
+                  {errors.submitter_name && <p className="text-[11px] text-red-500">{errors.submitter_name}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[var(--muted)]">Email *</label>
+                    <input
+                      type="email" value={form.submitter_email} onChange={set("submitter_email")}
+                      placeholder="you@example.com" className={inputCls} />
+                    {errors.submitter_email && <p className="text-[11px] text-red-500">{errors.submitter_email}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[var(--muted)]">Телефон *</label>
+                    <input
+                      type="tel" value={form.submitter_phone} onChange={set("submitter_phone")}
+                      placeholder="+992 XX XXX XXXX" className={inputCls} />
+                    {errors.submitter_phone && <p className="text-[11px] text-red-500">{errors.submitter_phone}</p>}
+                  </div>
+                </div>
+
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)] pt-2">О программе</p>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--muted)]">Название программы *</label>
+                  <input
+                    type="text" value={form.program_title} onChange={set("program_title")}
+                    placeholder="Например: Ausbildung — Informatikkaufmann" className={inputCls} />
+                  {errors.program_title && <p className="text-[11px] text-red-500">{errors.program_title}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--muted)]">Страна *</label>
+                  <select value={form.country} onChange={set("country")} className={inputCls}>
+                    <option value="">— Выберите страну —</option>
+                    {SUGGEST_COUNTRIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  {errors.country && <p className="text-[11px] text-red-500">{errors.country}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--muted)]">
+                    Описание программы * <span className="font-normal opacity-60">(мин. 50 симв.)</span>
+                  </label>
+                  <textarea
+                    rows={4} value={form.description} onChange={set("description")}
+                    placeholder="Расскажите, что это за программа, каковы требования, что она даёт участникам..."
+                    className={inputCls} />
+                  <p className="text-[10px] text-[var(--muted)] text-right">{form.description.length}/5000</p>
+                  {errors.description && <p className="text-[11px] text-red-500">{errors.description}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--muted)]">Ссылка на официальный сайт</label>
+                  <input
+                    type="url" value={form.official_url} onChange={set("official_url")}
+                    placeholder="https://..." className={inputCls} />
+                  {errors.official_url && <p className="text-[11px] text-red-500">{errors.official_url}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[var(--muted)]">Дополнительная информация</label>
+                  <textarea
+                    rows={3} value={form.extra_info} onChange={set("extra_info")}
+                    placeholder="Любые дополнительные сведения о программе..."
+                    className={inputCls} />
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Footer */}
+          {!success && (
+            <div className="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between sticky bottom-0 bg-[var(--background)] z-10">
+              <button
+                type="button" onClick={onClose}
+                className="px-4 py-2 rounded-xl border border-[var(--border)] text-sm font-semibold hover:bg-[var(--card)] transition-all"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit" form="suggest-form" disabled={submitting}
+                className="inline-flex items-center gap-2 px-6 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:bg-emerald-500 transition-all disabled:opacity-50 shadow-[0_4px_12px_rgba(16,185,129,0.25)]"
+              >
+                {submitting ? (
+                  <><div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> Отправка...</>
+                ) : (
+                  <><Send size={14} /> Отправить</>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -313,6 +528,7 @@ export default function ProgramsPage() {
   const { isAuthenticated } = useAuthStore();
   const { lang } = useLangStore();
   const router = useRouter();
+  const text = (translations[lang] as any)?.programsList || (translations.ru as any).programsList;
 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [filtered, setFiltered] = useState<Program[]>([]);
@@ -324,9 +540,12 @@ export default function ProgramsPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [authGate, setAuthGate] = useState<{ open: boolean; target: string }>({ open: false, target: "" });
+  const [suggestOpen, setSuggestOpen] = useState(false);
 
-  // Fetch programs
+  // Fetch programs — re-run when lang changes so titles/descriptions update
   useEffect(() => {
+    setLoading(true);
+    setError(false);
     api.get("/programs", { params: { size: 100 } })
       .then(res => {
         const list: Program[] = Array.isArray(res.data)
@@ -341,7 +560,7 @@ export default function ProgramsPage() {
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, []);
+  }, [lang]);
 
   // Fetch favorites
   useEffect(() => {
@@ -388,46 +607,53 @@ export default function ProgramsPage() {
   }, [isAuthenticated, favoriteIds]);
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)]">
+    <div className="min-h-[100dvh] bg-[var(--background-subtle)] text-[var(--foreground)]">
 
       {/* ─── Hero ──────────────────────────────────────── */}
-      <div className="pt-14 border-b border-[var(--border)]">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-10">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] mb-2">
-                {loading ? "Загрузка…" : `${filtered.length} программ`}
+      <div className="pt-14 bg-[var(--card)] border-b border-[var(--border)]">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-10 md:py-12">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="space-y-2">
+              <p className="section-label">
+                {loading ? "загружаем…" : `${filtered.length} ${text.count}`}
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Все программы
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
+                {text.title}
               </h1>
-              <p className="mt-2 text-sm text-[var(--muted)] max-w-[50ch] leading-relaxed">
-                Образование, работа, стажировки и иммиграция в 13 странах — реальные программы с актуальными требованиями.
+              <p className="text-sm text-[var(--muted)] max-w-[52ch] leading-relaxed font-light">
+                {text.subtitle}
               </p>
             </div>
+            <button
+              onClick={() => setSuggestOpen(true)}
+              className="btn btn-secondary btn-sm shrink-0 mt-1"
+            >
+              <Plus size={13} />
+              {text.suggestBtn}
+            </button>
           </div>
         </div>
       </div>
 
       {/* ─── Filter bar ─────────────────────────────────── */}
-      <div className="sticky top-14 z-40 bg-[var(--background)]/95 backdrop-blur-md border-b border-[var(--border)]">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="sticky top-14 z-40 bg-[var(--card)] border-b border-[var(--border)] shadow-[var(--shadow-xs)]">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
           {/* Search */}
-          <div className="relative flex-1 max-w-xs">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)] pointer-events-none" />
+          <div className="relative flex-shrink-0 w-full sm:w-60">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)] pointer-events-none" />
             <input
               type="text"
-              placeholder="Поиск программ…"
+              placeholder={text.searchPlaceholder}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-8 pr-8 py-2 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm
-                placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)]/50 focus:ring-1
-                focus:ring-[var(--accent)]/20 transition-all"
+              className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--background-subtle)] text-sm
+                placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2
+                focus:ring-[var(--accent)]/10 transition-all"
             />
             {search && (
               <button onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
-                <X size={13} />
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+                <X size={12} />
               </button>
             )}
           </div>
@@ -435,27 +661,29 @@ export default function ProgramsPage() {
           {/* Mobile toggle */}
           <button
             onClick={() => setFiltersOpen(v => !v)}
-            className="sm:hidden flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--border)] text-sm font-medium justify-center"
+            className="sm:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-sm font-medium justify-center"
           >
             <SlidersHorizontal size={13} />
-            Категории
+            {text.categoriesToggle}
           </button>
 
           {/* Category pills */}
           <div className={`${filtersOpen ? "flex" : "hidden"} sm:flex flex-wrap gap-1.5`}>
             {categories.map(cat => {
-              const label = CATEGORY_LABELS_RU[cat] ?? cat;
+              const label = (text.categories as Record<string, string>)?.[cat] ?? cat;
               const active = selectedCategory === cat;
+              const cfg = CATEGORY_CONFIG[cat];
               return (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap border transition-all ${
+                  className={`px-3 py-1 rounded-md text-xs font-semibold whitespace-nowrap border transition-all flex items-center gap-1.5 ${
                     active
-                      ? "bg-[var(--foreground)] text-[var(--background)] border-transparent"
-                      : "border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--accent)]/30 bg-transparent"
+                      ? "bg-[var(--accent)] text-white border-transparent shadow-[0_2px_8px_rgba(16,185,129,0.25)]"
+                      : "border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--border)] bg-[var(--background-subtle)]"
                   }`}
                 >
+                  {cfg && cat !== "ALL" && <span className="text-[11px] leading-none">{cfg.emoji}</span>}
                   {label}
                 </button>
               );
@@ -478,14 +706,14 @@ export default function ProgramsPage() {
         {!loading && error && (
           <div className="flex flex-col items-center justify-center py-32 text-center gap-3">
             <AlertCircle size={32} className="text-[var(--muted)]" />
-            <p className="font-semibold">Не удалось загрузить программы</p>
-            <p className="text-sm text-[var(--muted)]">Проверьте соединение и обновите страницу</p>
+            <p className="font-semibold">{text.errorTitle}</p>
+            <p className="text-sm text-[var(--muted)]">{text.errorSub}</p>
             <button
               onClick={() => window.location.reload()}
               className="mt-2 px-5 py-2 rounded-xl border border-[var(--border)] text-sm font-medium
                 hover:border-[var(--accent)]/40 hover:bg-[var(--accent-dim)] transition-all"
             >
-              Обновить
+              {text.errorBtn}
             </button>
           </div>
         )}
@@ -495,17 +723,15 @@ export default function ProgramsPage() {
           <div className="flex flex-col items-center justify-center py-32 text-center gap-3 border border-dashed border-[var(--border)] rounded-2xl">
             <Search size={28} className="text-[var(--muted)]" strokeWidth={1.5} />
             <div>
-              <p className="font-semibold mb-1">Ничего не найдено</p>
-              <p className="text-sm text-[var(--muted)] max-w-xs">
-                Попробуйте другой запрос или сбросьте фильтры
-              </p>
+              <p className="font-semibold mb-1">{text.emptyTitle}</p>
+              <p className="text-sm text-[var(--muted)] max-w-xs">{text.emptySub}</p>
             </div>
             <button
               onClick={() => { setSearch(""); setSelectedCategory("ALL"); }}
               className="px-5 py-2 rounded-xl border border-[var(--border)] text-sm font-medium
                 hover:border-[var(--accent)]/40 hover:bg-[var(--accent-dim)] transition-all"
             >
-              Сбросить
+              {text.emptyBtn}
             </button>
           </div>
         )}
@@ -521,6 +747,9 @@ export default function ProgramsPage() {
                 isAuthenticated={isAuthenticated}
                 onCardClick={handleCardClick}
                 onToggleFav={toggleFavorite}
+                catLabel={(text.categories as Record<string, string>)?.[(program.category || "").toUpperCase()]}
+                clarifyConditions={text.clarifyConditions}
+                lang={lang}
               />
             ))}
           </div>
@@ -532,6 +761,8 @@ export default function ProgramsPage() {
         onClose={() => setAuthGate({ open: false, target: "" })}
         redirectTo={authGate.target}
       />
+
+      {suggestOpen && <SuggestProgramModal onClose={() => setSuggestOpen(false)} />}
     </div>
   );
 }

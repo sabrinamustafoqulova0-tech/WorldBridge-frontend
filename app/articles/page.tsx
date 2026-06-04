@@ -37,6 +37,7 @@ const FALLBACK_IMAGES = [
 export default function ArticlesListPage() {
   const { lang } = useLangStore();
   const navText = translations[lang]?.nav || translations.ru.nav;
+  const text = (translations[lang] as any)?.articlesList || (translations.ru as any).articlesList;
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,7 @@ export default function ArticlesListPage() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
+        setLoading(true);
         const res = await api.get("/articles");
         setArticles(res.data.items);
       } catch (err) {
@@ -54,7 +56,7 @@ export default function ArticlesListPage() {
       }
     };
     fetchArticles();
-  }, []);
+  }, [lang]);
 
   const filteredArticles = articles.filter(a =>
     a.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -99,12 +101,12 @@ export default function ArticlesListPage() {
             </p>
 
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[1.0] text-balance">
-              База знаний{" "}
-              <span className="text-[var(--accent)]">и инсайты</span>
+              {text.title1}{" "}
+              <span className="text-[var(--accent)]">{text.title2}</span>
             </h1>
 
             <p className="text-sm md:text-base text-[var(--muted)] leading-relaxed max-w-[55ch] font-light">
-              Полезные статьи, руководства и личные истории о переезде, адаптации, учёбе и карьере за границей.
+              {text.subtitle}
             </p>
           </motion.div>
 
@@ -118,7 +120,7 @@ export default function ArticlesListPage() {
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
             <input
               type="text"
-              placeholder="Поиск статей..."
+              placeholder={text.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]"
@@ -154,7 +156,7 @@ export default function ArticlesListPage() {
 
                     <div className="absolute bottom-0 left-0 right-0 p-8 space-y-3">
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-[var(--accent-dim)] border border-[var(--accent)]/30 px-3 py-1 rounded-full backdrop-blur-sm">
-                        <BookOpen size={9} /> Главная статья
+                        <BookOpen size={9} /> {text.featuredBadge}
                       </span>
                       <h2 className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tight group-hover:text-[var(--accent)] transition-colors max-w-2xl text-balance">
                         {filteredArticles[0].title}
@@ -169,7 +171,7 @@ export default function ArticlesListPage() {
                           {new Date(filteredArticles[0].created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
                         </span>
                         <span className="ml-auto inline-flex items-center gap-1.5 font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
-                          Читать <ArrowRight size={12} />
+                          {text.readMore} <ArrowRight size={12} />
                         </span>
                       </div>
                     </div>
@@ -188,7 +190,7 @@ export default function ArticlesListPage() {
               {(search ? filteredArticles : filteredArticles.slice(1)).map((article, idx) => (
                 <motion.div key={article.id} variants={itemVariants}>
                   <Link href={`/articles/${article.slug}`}>
-                    <div className="group border border-[var(--border)] rounded-2xl overflow-hidden bg-[var(--card)] hover:border-[var(--accent)]/30 hover:shadow-lg transition-all duration-300 flex flex-col h-full cursor-pointer">
+                    <div className="group card-interactive overflow-hidden flex flex-col h-full cursor-pointer">
 
                       {/* Cover */}
                       <div className="relative h-48 overflow-hidden bg-[var(--border)]/10 shrink-0">
@@ -199,7 +201,7 @@ export default function ArticlesListPage() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)]/60 to-transparent" />
                         <span className="absolute top-3 left-3 text-[9px] font-bold px-2.5 py-1 rounded-full bg-[var(--background)]/90 border border-[var(--border)] text-[var(--accent)] backdrop-blur-sm">
-                          Статья
+                          {text.articleBadge}
                         </span>
                       </div>
 
@@ -219,11 +221,15 @@ export default function ArticlesListPage() {
                             <span className="flex items-center gap-1"><Eye size={10} /> {article.views_count}</span>
                             <span className="flex items-center gap-1">
                               <Clock size={10} />
+                              {Math.max(1, Math.ceil(article.excerpt.split(" ").length / 40))} мин
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar size={10} />
                               {new Date(article.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
                             </span>
                           </div>
                           <span className="inline-flex items-center gap-1 font-semibold text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
-                            Читать <ArrowRight size={10} />
+                            {text.readMore} <ArrowRight size={10} />
                           </span>
                         </div>
                       </div>
@@ -235,7 +241,7 @@ export default function ArticlesListPage() {
 
             {filteredArticles.length === 0 && (
               <div className="text-center py-20 text-[var(--muted)] text-sm font-light">
-                Ничего не найдено по вашему запросу.
+                {text.nothingFound}
               </div>
             )}
           </>

@@ -1,16 +1,25 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
+import { useLangStore } from "../store/langStore";
 
 const api = axios.create({
   baseURL: "http://127.0.0.1:8000/api/v1",
 });
 
-// Request interceptor: add Authorization header
+// Request interceptor: add Authorization header + inject lang into GET requests
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Automatically pass current lang to all GET requests so the backend
+  // returns content in the right language.
+  if (!config.method || config.method.toLowerCase() === "get") {
+    const lang = useLangStore.getState().lang;
+    config.params = { lang, ...config.params };
+  }
+
   return config;
 });
 

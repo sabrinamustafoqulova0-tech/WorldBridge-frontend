@@ -140,7 +140,7 @@ export default function AIConsultantPage() {
       <div className="max-w-[1440px] mx-auto px-4 md:px-6 w-full mt-4 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 items-start flex-1">
 
         {/* ── Form Panel ───────────────────────────────────────── */}
-        <div className="glass border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm h-fit">
+        <div className="card border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm h-fit">
           <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-[var(--border)]">
             <div className="w-8 h-8 rounded-xl bg-[var(--accent-dim)] border border-[var(--accent)]/20 flex items-center justify-center">
               <Sparkles size={14} className="text-[var(--accent)]" />
@@ -268,7 +268,7 @@ export default function AIConsultantPage() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Success Score Card */}
-              <div className="relative overflow-hidden glass border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+              <div className="relative overflow-hidden card border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 pointer-events-none" />
                 <div className="relative space-y-3">
                   <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[var(--accent)]">
@@ -298,7 +298,7 @@ export default function AIConsultantPage() {
 
                 {result.recommended_countries.map((country, idx) => (
                   <Link href={`/countries/${country.slug}`} key={country.slug}>
-                    <div className="group glass border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent)]/30 hover:bg-[var(--card)] transition-all duration-200 relative overflow-hidden cursor-pointer">
+                    <div className="group card border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent)]/30 hover:bg-[var(--card)] transition-all duration-200 relative overflow-hidden cursor-pointer">
                       {/* Rank stripe */}
                       <div
                         className="absolute left-0 top-0 h-full w-1 rounded-l-2xl"
@@ -344,7 +344,7 @@ export default function AIConsultantPage() {
               </div>
 
               {/* Next Steps */}
-              <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-3">
+              <div className="card border-[var(--border)] rounded-2xl p-5 space-y-3">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
                   Ваши следующие шаги
                 </h3>

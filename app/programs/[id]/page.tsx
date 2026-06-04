@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthStore } from "../../../store/authStore";
+import { useLangStore } from "../../../store/langStore";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, use } from "react";
@@ -68,6 +69,7 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
   const router = useRouter();
 
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { lang } = useLangStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -106,7 +108,7 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
     };
 
     fetchProgram();
-  }, [programId, authLoading, isAuthenticated, router]);
+  }, [programId, authLoading, isAuthenticated, router, lang]);
 
   if (authLoading || loading) {
     return (

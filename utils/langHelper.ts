@@ -2,11 +2,12 @@ import { Lang } from '../store/langStore';
 
 export function getLocalizedField(obj: any, fieldName: string, lang: Lang): string {
   if (!obj) return "";
-  
-  if (lang === 'en' && obj[`${fieldName}_en`]) {
-    return obj[`${fieldName}_en`];
+
+  // Try the exact requested language first
+  if (lang !== 'ru' && obj[`${fieldName}_${lang}`]) {
+    return obj[`${fieldName}_${lang}`];
   }
-  
-  // Default to ru for both 'ru' and 'tg', since we don't have 'tg' in DB
+
+  // Fallback chain: _ru → base field
   return obj[`${fieldName}_ru`] || obj[fieldName] || '';
 }

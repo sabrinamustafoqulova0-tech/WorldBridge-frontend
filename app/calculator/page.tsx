@@ -101,6 +101,8 @@ export default function CalculatorPage() {
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null);
 
   const navText = translations[lang]?.nav || translations.ru.nav;
+  const calc = (translations[lang] as any)?.calculator || (translations.ru as any).calculator;
+  const countryDisplayName = (c: string) => (calc.countryNames as Record<string, string>)?.[c] || c;
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -115,12 +117,21 @@ export default function CalculatorPage() {
   const isPositive = surplus >= 0;
 
   const EXPENSE_ITEMS = [
-    { label: "Жильё", icon: <HomeIcon size={14} />, amount: country.rent * rate, color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
-    { label: "Питание", icon: <Utensils size={14} />, amount: country.food * rate, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
-    { label: "Транспорт", icon: <Bus size={14} />, amount: country.transport * rate, color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
-    { label: "Страховка", icon: <Activity size={14} />, amount: country.insurance * rate, color: "text-rose-500 bg-rose-500/10 border-rose-500/20" },
-    { label: "Интернет", icon: <Wifi size={14} />, amount: country.internet * rate, color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
+    { label: calc.rent, icon: <HomeIcon size={14} />, amount: country.rent * rate, color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
+    { label: calc.food, icon: <Utensils size={14} />, amount: country.food * rate, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+    { label: calc.transport, icon: <Bus size={14} />, amount: country.transport * rate, color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+    { label: calc.insurance, icon: <Activity size={14} />, amount: country.insurance * rate, color: "text-rose-500 bg-rose-500/10 border-rose-500/20" },
+    { label: calc.internet, icon: <Wifi size={14} />, amount: country.internet * rate, color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
   ];
+
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isModalOpen]);
 
   const handleCountryClick = (c: string) => {
     if (c === selectedCountry && activeOffer) return;
@@ -154,13 +165,13 @@ export default function CalculatorPage() {
         <div className="max-w-[1440px] mx-auto space-y-3">
           <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
             <Calculator size={12} />
-            Интерактивный калькулятор
+            {calc.badge}
           </p>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tighter leading-tight text-balance">
-            Калькулятор расходов
+            {calc.title}
           </h1>
           <p className="text-sm md:text-base text-[var(--muted)] leading-relaxed max-w-[55ch]">
-            Рассчитайте, сколько будет стоить жизнь за рубежом и хватит ли вам бюджета для комфортного переезда.
+            {calc.subtitle}
           </p>
         </div>
       </div>
@@ -178,7 +189,7 @@ export default function CalculatorPage() {
                   <Sparkles size={14} className="animate-pulse" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[9px] uppercase font-bold tracking-widest text-[var(--accent)] mb-0.5">Применена программа</p>
+                  <p className="text-[9px] uppercase font-bold tracking-widest text-[var(--accent)] mb-0.5">{calc.appliedProgram}</p>
                   <h4 className="text-xs sm:text-sm font-bold text-[var(--foreground)] leading-tight truncate">{activeOffer.name}</h4>
                   <p className="text-[11px] text-[var(--muted)] truncate">{activeOffer.description}</p>
                 </div>
@@ -187,33 +198,33 @@ export default function CalculatorPage() {
                 onClick={() => setActiveOffer(null)}
                 className="text-[10px] font-bold text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-500/20 px-2.5 py-1.5 rounded-lg transition-all ml-4 shrink-0"
               >
-                Сбросить
+                {calc.resetBtn}
               </button>
             </div>
           )}
 
           {/* Country Selection */}
-          <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-bold tracking-tight">Страна назначения</h2>
+          <div className="card rounded-2xl p-5 space-y-4">
+            <h2 className="text-sm font-bold tracking-tight">{calc.destinationLabel}</h2>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
               {Object.keys(COUNTRIES_DATA).map((c) => (
                 <button
                   key={c}
                   onClick={() => handleCountryClick(c)}
                   className={`py-2 px-1 rounded-lg text-xs font-semibold transition-all truncate ${selectedCountry === c
-                      ? "bg-[var(--foreground)] text-[var(--background)]"
+                      ? "bg-[var(--accent)] text-white shadow-[0_2px_8px_rgba(16,185,129,0.25)]"
                       : "bg-[var(--card)] border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)]"
                     }`}
                 >
-                  {c}
+                  {countryDisplayName(c)}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Duration */}
-          <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-bold tracking-tight">Длительность пребывания</h2>
+          <div className="card rounded-2xl p-5 space-y-4">
+            <h2 className="text-sm font-bold tracking-tight">{calc.durationLabel}</h2>
             <div className="grid grid-cols-4 gap-1.5">
               {DURATIONS.map((d) => (
                 <button
@@ -227,19 +238,19 @@ export default function CalculatorPage() {
                       : "bg-[var(--card)] border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)]"
                     }`}
                 >
-                  {d} мес.
+                  {d} {calc.months}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Salary & Savings Inputs */}
-          <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-5">
-            <h2 className="text-sm font-bold tracking-tight">Ваши финансы</h2>
+          <div className="card rounded-2xl p-5 space-y-5">
+            <h2 className="text-sm font-bold tracking-tight">{calc.financeLabel}</h2>
 
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-[var(--muted)]">Ежемесячная зарплата (USD)</span>
+                <span className="text-[var(--muted)]">{calc.salaryLabel}</span>
                 <span className="text-[var(--accent)]">${salary.toLocaleString()}</span>
               </div>
               <input
@@ -258,7 +269,7 @@ export default function CalculatorPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-[var(--muted)]">Ваши стартовые накопления (USD)</span>
+                <span className="text-[var(--muted)]">{calc.savingsLabel}</span>
                 <span className="text-[var(--accent)]">${savings.toLocaleString()}</span>
               </div>
               <input
@@ -277,8 +288,8 @@ export default function CalculatorPage() {
           </div>
 
           {/* One-time costs switches */}
-          <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-bold tracking-tight">Разовые расходы</h2>
+          <div className="card rounded-2xl p-5 space-y-4">
+            <h2 className="text-sm font-bold tracking-tight">{calc.onetimeCosts}</h2>
 
             <div className="space-y-3.5">
               <div className="flex items-center justify-between">
@@ -286,7 +297,7 @@ export default function CalculatorPage() {
                   <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
                     <Plane size={14} />
                   </div>
-                  <span>Авиаперелет (~${country.flight})</span>
+                  <span>{calc.flightCost} (~${country.flight})</span>
                 </div>
                 <button
                   onClick={() => {
@@ -304,7 +315,7 @@ export default function CalculatorPage() {
                   <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
                     <Globe size={14} />
                   </div>
-                  <span>Оформление визы (~${country.visa})</span>
+                  <span>{calc.visaCost} (~${country.visa})</span>
                 </div>
                 <button
                   onClick={() => {
@@ -331,20 +342,20 @@ export default function CalculatorPage() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-[40px] pointer-events-none" />
             <div className="relative space-y-2">
               <p className="text-white/80 font-bold uppercase tracking-widest text-[9px]">
-                {isPositive ? "Профицит бюджета 🎉" : "Недостаточно средств ⚠️"}
+                {isPositive ? `${calc.surplus} 🎉` : `${calc.deficit} ⚠️`}
               </p>
               <h3 className="text-3xl font-extrabold tracking-tight">
                 {isPositive ? "+" : ""}{surplus.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
               </h3>
               <p className="text-[11px] text-white/70 font-semibold leading-relaxed">
-                Остаток бюджета за {duration} мес. в {selectedCountry} с учетом стартовых накоплений.
+                {calc.surplusDesc} {duration} {calc.months} {calc.surplusDesc2} {countryDisplayName(selectedCountry)} {calc.surplusDesc3}
               </p>
             </div>
           </div>
 
           {/* Monthly Items */}
-          <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-4">
-            <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)]">Ежемесячные расходы</h3>
+          <div className="card rounded-2xl p-5 space-y-4">
+            <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)]">{calc.monthlyExpenses}</h3>
 
             <div className="space-y-3">
               {EXPENSE_ITEMS.map((item) => (
@@ -360,38 +371,38 @@ export default function CalculatorPage() {
               ))}
 
               <div className="pt-3.5 mt-3.5 border-t border-[var(--border)] flex items-center justify-between">
-                <span className="font-bold text-xs">Итого в месяц</span>
+                <span className="font-bold text-xs">{calc.totalPerMonth}</span>
                 <span className="text-base font-extrabold text-[var(--accent)]">${monthlyExpenses.toFixed(0)}</span>
               </div>
             </div>
           </div>
 
           {/* Full Summary Table */}
-          <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-3 text-xs">
-            <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)] mb-1">Итоговый расчёт</h3>
+          <div className="card rounded-2xl p-5 space-y-3 text-xs">
+            <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)] mb-1">{calc.totalSummary}</h3>
 
             <div className="space-y-2">
               <div className="flex justify-between font-semibold">
-                <span className="text-[var(--muted)]">Расходы за {duration} мес.</span>
+                <span className="text-[var(--muted)]">{calc.expensesFor} {duration} {calc.months}</span>
                 <span className="text-rose-500">-${(monthlyExpenses * duration).toFixed(0)}</span>
               </div>
               {oneTimeCosts > 0 && (
                 <div className="flex justify-between font-semibold">
-                  <span className="text-[var(--muted)]">Разовые расходы</span>
+                  <span className="text-[var(--muted)]">{calc.onetimeCostsLabel}</span>
                   <span className="text-rose-500">-${oneTimeCosts}</span>
                 </div>
               )}
               <div className="flex justify-between font-semibold">
-                <span className="text-[var(--muted)]">Доход за {duration} мес.</span>
+                <span className="text-[var(--muted)]">{calc.incomeFor} {duration} {calc.months}</span>
                 <span className="text-emerald-500">+${totalIncome.toLocaleString()}</span>
               </div>
               <div className="flex justify-between font-semibold">
-                <span className="text-[var(--muted)]">Накопления</span>
+                <span className="text-[var(--muted)]">{calc.savings}</span>
                 <span className="text-emerald-500">+${savings.toLocaleString()}</span>
               </div>
 
               <div className="pt-3 mt-3 border-t border-[var(--border)] flex justify-between items-center">
-                <span className="font-bold text-xs">Итоговый баланс</span>
+                <span className="font-bold text-xs">{calc.totalSurplus}</span>
                 <span className={`font-extrabold text-sm ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
                   {isPositive ? "+" : ""}{surplus.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
                 </span>
@@ -410,7 +421,8 @@ export default function CalculatorPage() {
 
       {/* Modern High-End Offers Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] overflow-y-auto animate-in fade-in duration-200">
+          <div className="flex min-h-full items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
 
           <div className="w-full max-w-md bg-[var(--background)] ring-1 ring-[var(--border)] p-5 rounded-2xl flex flex-col shadow-2xl relative overflow-hidden transition-all">
 
@@ -464,7 +476,7 @@ export default function CalculatorPage() {
                     Доступные программы в стране {pendingCountry}:
                   </p>
 
-                  <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1 scrollbar-none">
+                  <div className="max-h-[260px] overflow-y-auto overscroll-y-contain space-y-2 pr-1 scrollbar-none">
                     {PROGRAMS_OFFERS[pendingCountry] && PROGRAMS_OFFERS[pendingCountry].length > 0 ? (
                       PROGRAMS_OFFERS[pendingCountry].map((offer) => (
                         <div
@@ -512,6 +524,7 @@ export default function CalculatorPage() {
               )}
             </div>
 
+          </div>
           </div>
         </div>
       )}

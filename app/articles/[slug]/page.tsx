@@ -66,7 +66,7 @@ export default function ArticleDetailPage() {
     };
 
     fetchArticleAndSuggestions();
-  }, [params?.slug]);
+  }, [params?.slug, lang]);
 
   const handleShare = () => {
     if (typeof window !== "undefined") {
@@ -88,7 +88,7 @@ export default function ArticleDetailPage() {
   if (error || !article) {
     return (
       <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] flex flex-col justify-center items-center px-4">
-        <div className="glass border border-[var(--border)] p-8 rounded-2xl max-w-md w-full text-center space-y-4">
+        <div className="card border-[var(--border)] p-8 rounded-2xl max-w-md w-full text-center space-y-4">
           <BookOpen className="w-12 h-12 mx-auto text-[var(--muted)] opacity-50" />
           <h2 className="text-xl font-bold">Статья не найдена</h2>
           <p className="text-xs text-[var(--muted)]">
@@ -157,7 +157,7 @@ export default function ArticleDetailPage() {
             )}
 
             {/* Rich Text Body Content */}
-            <div className="glass border border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-6">
+            <div className="card border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-6">
               <div
                 className="article-content text-sm md:text-base leading-relaxed text-[var(--foreground)] opacity-95 space-y-4"
                 dangerouslySetInnerHTML={{ __html: article.content }}
@@ -167,7 +167,7 @@ export default function ArticleDetailPage() {
 
           {/* Sidebar / Recommended Articles */}
           <aside className="space-y-6">
-            <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-4">
+            <div className="card border-[var(--border)] rounded-2xl p-5 space-y-4">
               <h3 className="font-bold text-sm uppercase tracking-wider text-[var(--accent)] flex items-center gap-1.5">
                 <BookOpen size={14} />
                 Читайте также

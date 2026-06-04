@@ -151,7 +151,7 @@ export default function AIConsultantWidget() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-none">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-4 py-4 space-y-3 scrollbar-none">
               {historyLoading ? (
                 <div className="flex flex-col gap-3">
                   {Array.from({ length: 3 }).map((_, i) => (

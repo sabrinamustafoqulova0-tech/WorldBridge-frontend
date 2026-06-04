@@ -10,11 +10,12 @@ import { translations } from "../../locales/translations";
 import { getLocalizedField } from "../../utils/langHelper";
 import AuthGateModal from "../../components/AuthGateModal";
 import { motion } from "framer-motion";
-import { 
-  Search, 
+import {
+  Search,
   MapPin,
   ArrowRight,
-  Compass
+  Compass,
+  Globe
 } from "lucide-react";
 
 interface Country {
@@ -65,6 +66,7 @@ export default function CountriesListPage() {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
+        setLoading(true);
         const res = await api.get("/countries");
         setCountries(res.data.items);
       } catch (err) {
@@ -74,7 +76,7 @@ export default function CountriesListPage() {
       }
     };
     fetchCountries();
-  }, []);
+  }, [lang]);
 
   const filteredCountries = countries.filter(c => 
     c.name_ru.toLowerCase().includes(search.toLowerCase()) || 
@@ -149,6 +151,17 @@ export default function CountriesListPage() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Stats strip */}
+            {filteredCountries.length > 0 && (
+              <div className="flex items-center gap-4 py-3 border-b border-[var(--border)] text-xs text-[var(--muted)]">
+                <span className="flex items-center gap-1.5">
+                  <Globe size={12} className="text-[var(--accent)]" />
+                  {filteredCountries.length} направлений
+                </span>
+                <span className="text-[var(--border-subtle)]">·</span>
+                <span>Европа · Азия · Америка</span>
+              </div>
+            )}
             <motion.div 
               variants={containerVariants}
               initial="hidden"
@@ -162,7 +175,7 @@ export default function CountriesListPage() {
                     variants={itemVariants}
                     key={country.id}
                     onClick={() => handleCountryClick(country.slug)}
-                    className="group block text-left w-full relative h-[280px] rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-sm hover:shadow-xl hover:border-[var(--accent)]/30 transition-all duration-300 cursor-pointer"
+                    className="group block text-left w-full relative h-[300px] rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-sm hover:shadow-xl hover:border-[var(--accent)]/30 hover:scale-[1.02] transition-all duration-500 cursor-pointer"
                   >
                     {/* Background image container */}
                     <div className="absolute inset-0 z-0 overflow-hidden">
@@ -178,8 +191,14 @@ export default function CountriesListPage() {
                     {/* Content */}
                     <div className="absolute inset-0 p-6 flex flex-col justify-end z-10 space-y-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform duration-300">
-                          {country.flag_emoji}
+                        <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/15 shadow-lg shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`https://flagcdn.com/w80/${country.slug.toLowerCase()}.png`}
+                            alt={country.name_en}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
                         <h3 className="font-bold text-base sm:text-lg text-white group-hover:text-[var(--accent)] transition-colors line-clamp-1">
                           {getLocalizedField(country, 'name', lang)}
@@ -191,7 +210,7 @@ export default function CountriesListPage() {
                           <MapPin size={9} />
                           {country.region}
                         </span>
-                        <div className="w-7 h-7 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm flex items-center justify-center text-white group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all">
+                        <div className="w-7 h-7 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm flex items-center justify-center text-white group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all">
                           <ArrowRight size={12} />
                         </div>
                       </div>

@@ -220,7 +220,7 @@ export default function AdminArticlesPage() {
           </div>
           <button
             onClick={handleCreateNew}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-[0_4px_12px_rgba(16,185,129,0.2)]"
+            className="btn btn-primary btn-sm"
           >
             <Plus size={14} /> Добавить статью
           </button>
@@ -239,7 +239,7 @@ export default function AdminArticlesPage() {
         </div>
 
         {/* Article Table inside Glass card */}
-        <div className="glass border border-[var(--border)] rounded-2xl overflow-hidden">
+        <div className="card overflow-hidden">
           {loading ? (
             <div className="py-20 flex justify-center items-center">
               <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
@@ -248,7 +248,7 @@ export default function AdminArticlesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs md:text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--border)] bg-[var(--border)]/5 text-[var(--muted)] font-semibold">
+                  <tr className="border-b border-[var(--border)] bg-[var(--background-subtle)] sticky top-0 text-[var(--muted)] font-semibold">
                     <th className="p-4">Название</th>
                     <th className="p-4">ЧПУ (Slug)</th>
                     <th className="p-4 text-center">Просмотры</th>
@@ -364,11 +364,11 @@ export default function AdminArticlesPage() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           />
 
-          {/* Panel — full height, slides from right */}
-          <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-[var(--background)] border-l border-[var(--border)] shadow-2xl flex flex-col animate-slide-left">
+          {/* Panel — full height, slides from right, панель сама скролится */}
+          <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-[var(--background)] border-l border-[var(--border)] shadow-2xl overflow-y-auto animate-slide-left">
 
-            {/* Header — fixed, never scrolls */}
-            <div className="shrink-0 px-6 py-4 border-b border-[var(--border)] bg-[var(--background)] flex items-center justify-between">
+            {/* Header — sticky, всегда виден */}
+            <div className="sticky top-0 z-10 px-6 py-4 border-b border-[var(--border)] bg-[var(--background)] flex items-center justify-between">
               <div>
                 <h2 className="text-base font-bold">
                   {editId ? "Редактировать статью" : "Создать статью"}
@@ -383,8 +383,8 @@ export default function AdminArticlesPage() {
               </button>
             </div>
 
-            {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Содержимое — без overflow */}
+            <div className="">
               <form onSubmit={handleSave} id="art-form">
                 <div className="px-6 py-5 space-y-5">
 
@@ -459,8 +459,8 @@ export default function AdminArticlesPage() {
               </form>
             </div>
 
-            {/* Footer — fixed at bottom, always visible */}
-            <div className="shrink-0 px-6 py-4 border-t border-[var(--border)] bg-[var(--background)] flex items-center justify-between">
+            {/* Footer — sticky bottom, всегда виден */}
+            <div className="sticky bottom-0 z-10 px-6 py-4 border-t border-[var(--border)] bg-[var(--background)] flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(false)}

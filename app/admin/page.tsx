@@ -6,7 +6,7 @@ import { useAuthStore } from "../../store/authStore";
 import api from "../../lib/api";
 import {
   Layers, FileText, Users, Eye, Plus, TrendingUp,
-  CheckCircle, XCircle, ArrowRight,
+  CheckCircle, XCircle, ArrowRight, Lightbulb,
 } from "lucide-react";
 import { CountryFlag } from "../../components/CountryFlag";
 
@@ -17,6 +17,8 @@ interface StatsData {
   publishedArticles: number;
   totalUsers: number;
   totalViews: number;
+  pendingSuggestions: number;
+  totalSuggestions: number;
 }
 
 interface RecentProgram {
@@ -59,10 +61,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [progRes, artRes, usersRes] = await Promise.all([
+        const [progRes, artRes, usersRes, suggestRes] = await Promise.all([
           api.get("/programs/admin/all", { params: { page: 1, size: 100 } }),
           api.get("/articles", { params: { admin_view: true, page: 1, size: 100 } }),
           api.get("/users"),
+          api.get("/suggestions/admin/all", { params: { page: 1, size: 1 } }),
         ]);
 
         const programs: RecentProgram[] = progRes.data.items;
@@ -81,6 +84,8 @@ export default function AdminDashboard() {
           publishedArticles: publishedArts,
           totalUsers: Array.isArray(users) ? users.length : (usersRes.data.total ?? 0),
           totalViews,
+          pendingSuggestions: suggestRes.data.pending_count ?? 0,
+          totalSuggestions: suggestRes.data.total ?? 0,
         });
 
         setRecentPrograms(programs.slice(0, 5));
@@ -103,6 +108,7 @@ export default function AdminDashboard() {
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
       href: "/admin/programs",
+      badge: 0,
     },
     {
       label: "Статьи",
@@ -112,6 +118,7 @@ export default function AdminDashboard() {
       color: "text-sky-500",
       bg: "bg-sky-500/10",
       href: "/admin/articles",
+      badge: 0,
     },
     {
       label: "Пользователи",
@@ -121,6 +128,7 @@ export default function AdminDashboard() {
       color: "text-violet-500",
       bg: "bg-violet-500/10",
       href: "/admin/users",
+      badge: 0,
     },
     {
       label: "Просмотры",
@@ -130,6 +138,19 @@ export default function AdminDashboard() {
       color: "text-amber-500",
       bg: "bg-amber-500/10",
       href: null,
+      badge: 0,
+    },
+    {
+      label: "Предложения",
+      value: stats.totalSuggestions,
+      sub: stats.pendingSuggestions > 0
+        ? `${stats.pendingSuggestions} на рассмотрении`
+        : "предложений программ",
+      icon: Lightbulb,
+      color: stats.pendingSuggestions > 0 ? "text-amber-500" : "text-orange-500",
+      bg: stats.pendingSuggestions > 0 ? "bg-amber-500/10" : "bg-orange-500/10",
+      href: "/admin/suggestions",
+      badge: stats.pendingSuggestions,
     },
   ] : [];
 
@@ -149,26 +170,33 @@ export default function AdminDashboard() {
 
         {/* Stat cards */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="glass border border-[var(--border)] rounded-2xl p-5 animate-pulse h-24" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="card border-[var(--border)] rounded-2xl p-5 animate-pulse h-24" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {STAT_CARDS.map((card) => {
               const Icon = card.icon;
               const inner = (
-                <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-3 hover:border-[var(--accent)]/30 transition-colors">
+                <div className="card border border-[var(--border)] rounded-2xl p-5 space-y-3 hover:border-[var(--accent)]/30 hover:shadow-[var(--shadow-md)] transition-all">
                   <div className="flex items-center justify-between">
-                    <div className={`w-8 h-8 rounded-xl ${card.bg} flex items-center justify-center`}>
-                      <Icon size={15} className={card.color} />
+                    <div className={`w-9 h-9 rounded-2xl ${card.bg} flex items-center justify-center`}>
+                      <Icon size={16} className={card.color} />
                     </div>
-                    {card.href && <ArrowRight size={12} className="text-[var(--muted)]" />}
+                    <div className="flex items-center gap-1.5">
+                      {card.badge > 0 && (
+                        <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold leading-none flex items-center justify-center">
+                          {card.badge}
+                        </span>
+                      )}
+                      {card.href && <ArrowRight size={12} className="text-[var(--muted)]" />}
+                    </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-extrabold tracking-tight">{card.value}</p>
-                    <p className="text-[10px] text-[var(--muted)] font-semibold uppercase tracking-wider mt-0.5">
+                    <p className="text-3xl font-black tracking-tight">{card.value}</p>
+                    <p className="text-xs text-[var(--muted)] font-semibold mt-0.5">
                       {card.label}
                     </p>
                     <p className="text-[11px] text-[var(--muted)] mt-0.5">{card.sub}</p>
@@ -186,16 +214,10 @@ export default function AdminDashboard() {
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-3">
-          <Link
-            href="/admin/programs"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-emerald-500 transition-all shadow-[0_4px_12px_rgba(16,185,129,0.2)]"
-          >
+          <Link href="/admin/programs" className="btn btn-primary btn-sm">
             <Plus size={13} /> Добавить программу
           </Link>
-          <Link
-            href="/admin/articles"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--foreground)] text-[var(--background)] text-xs font-semibold hover:opacity-90 transition-all"
-          >
+          <Link href="/admin/articles" className="btn btn-secondary btn-sm">
             <Plus size={13} /> Добавить статью
           </Link>
         </div>
@@ -205,7 +227,7 @@ export default function AdminDashboard() {
           <div className="grid md:grid-cols-2 gap-6">
 
             {/* Recent programs */}
-            <div className="glass border border-[var(--border)] rounded-2xl overflow-hidden">
+            <div className="card overflow-hidden">
               <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
                 <h2 className="text-sm font-bold">Последние программы</h2>
                 <Link href="/admin/programs" className="text-[11px] text-[var(--accent)] font-semibold hover:underline">
@@ -236,7 +258,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Recent articles */}
-            <div className="glass border border-[var(--border)] rounded-2xl overflow-hidden">
+            <div className="card overflow-hidden">
               <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
                 <h2 className="text-sm font-bold">Последние статьи</h2>
                 <Link href="/admin/articles" className="text-[11px] text-[var(--accent)] font-semibold hover:underline">
@@ -271,7 +293,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Growth hint */}
-        <div className="glass border border-[var(--border)] rounded-2xl p-5 flex items-center gap-4">
+        <div className="card border-[var(--border)] rounded-2xl p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
             <TrendingUp size={18} className="text-[var(--accent)]" />
           </div>

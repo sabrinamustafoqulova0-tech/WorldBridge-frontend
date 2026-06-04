@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import LockIcon from "@mui/icons-material/Lock";
-import CloseIcon from "@mui/icons-material/Close";
+import { X, Lock, LogIn, UserPlus } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,56 +10,75 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
-    setMounted(true);
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "";
     }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  if (!mounted || !isOpen) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-md bg-white dark:bg-[#1E293B] rounded-2xl shadow-2xl p-8 transform transition-all">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-        >
-          <CloseIcon />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-modal="true" role="dialog">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-        <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-6">
-            <LockIcon className="text-[#3B82F6]" fontSize="large" />
+      <div className="relative z-10 w-full max-w-sm max-h-[90dvh] flex flex-col bg-[var(--background)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden">
+        {/* Ambient glow */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 pointer-events-none" />
+
+        {/* Header */}
+        <div className="shrink-0 relative px-6 pt-6 pb-4 flex items-start justify-between border-b border-[var(--border)]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--accent-dim)] border border-[var(--accent)]/20 flex items-center justify-center">
+              <Lock size={16} className="text-[var(--accent)]" />
+            </div>
+            <div>
+              <h2 className="font-bold text-sm tracking-tight">Доступ закрыт</h2>
+              <p className="text-[11px] text-[var(--muted)] mt-0.5">Войдите или создайте аккаунт</p>
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--border)]/30 transition-all"
+          >
+            <X size={13} />
+          </button>
+        </div>
 
-          <h2 className="text-2xl font-bold text-[#0F172A] dark:text-white mb-2">
-            Доступ закрыт
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-            Чтобы посмотреть полную информацию о программе, включая расходы, список документов, шансы на ВНЖ и официальные ссылки, пожалуйста, войдите или зарегистрируйтесь.
+        {/* Body — scrollable */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-6 py-5 space-y-4">
+          <p className="text-xs text-[var(--muted)] leading-relaxed">
+            Чтобы посмотреть полную информацию о программе, включая расходы, список документов, шансы на ВНЖ и официальные ссылки — войдите или зарегистрируйтесь.
           </p>
 
-          <div className="w-full flex flex-col gap-3">
+          <div className="space-y-2">
             <Link
               href="/register"
-              className="w-full bg-[#3B82F6] text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-500/30"
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-[var(--accent)] hover:opacity-90 text-white font-bold text-xs transition-all active:scale-[0.98] shadow-sm"
             >
+              <UserPlus size={14} />
               Зарегистрироваться бесплатно
             </Link>
             <Link
               href="/login"
-              className="w-full bg-gray-100 dark:bg-gray-800 text-[#0F172A] dark:text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border border-[var(--border)] hover:bg-[var(--card)] text-[var(--foreground)] font-bold text-xs transition-all active:scale-[0.98]"
             >
-              Войти
+              <LogIn size={14} />
+              Уже есть аккаунт — войти
             </Link>
           </div>
         </div>

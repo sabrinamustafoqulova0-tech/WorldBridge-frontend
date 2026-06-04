@@ -11,6 +11,7 @@ import { useAIConsultantStore } from "../../store/aiConsultantStore";
 import { translations } from "../../locales/translations";
 import { motion } from "framer-motion";
 import { MapPin, Search, X, CheckCircle2, Building, ExternalLink, FileText } from "lucide-react";
+import { COUNTRY_CENTERS, CITY_COORDS } from "../../utils/countryCoordinates";
 
 const WorldGlobe = dynamic(() => import("../../components/WorldGlobe"), {
   ssr: false,
@@ -22,61 +23,61 @@ const WorldGlobe = dynamic(() => import("../../components/WorldGlobe"), {
 });
 
 const COUNTRIES = [
-  { id: "de", name: "Germany",     programs: 142, lat: 51.1657,  lng: 10.4515  },
-  { id: "fr", name: "France",      programs: 89,  lat: 46.2276,  lng: 2.2137   },
-  { id: "be", name: "Belgium",     programs: 58,  lat: 50.5039,  lng: 4.4699   },
-  { id: "ch", name: "Switzerland", programs: 64,  lat: 46.8182,  lng: 8.2275   },
-  { id: "at", name: "Austria",     programs: 47,  lat: 47.5162,  lng: 14.5501  },
-  { id: "pl", name: "Poland",      programs: 112, lat: 51.9194,  lng: 19.1451  },
-  { id: "cz", name: "Czechia",     programs: 38,  lat: 49.8175,  lng: 15.4730  },
-  { id: "se", name: "Sweden",      programs: 76,  lat: 60.1282,  lng: 18.6435  },
-  { id: "no", name: "Norway",      programs: 41,  lat: 60.4720,  lng: 8.4689   },
-  { id: "fi", name: "Finland",     programs: 53,  lat: 61.9241,  lng: 25.7482  },
-  { id: "tr", name: "Turkey",      programs: 125, lat: 38.9637,  lng: 35.2433  },
-  { id: "cn", name: "China",       programs: 215, lat: 35.8617,  lng: 104.1954 },
-  { id: "ca", name: "Canada",      programs: 184, lat: 56.1304,  lng: -106.3468 },
-  { id: "us", name: "USA",         programs: 342, lat: 37.0902,  lng: -95.7129 },
+  { id: "de", name: "Germany",     programs: 142, ...COUNTRY_CENTERS.de },
+  { id: "fr", name: "France",      programs: 89,  ...COUNTRY_CENTERS.fr },
+  { id: "be", name: "Belgium",     programs: 58,  ...COUNTRY_CENTERS.be },
+  { id: "ch", name: "Switzerland", programs: 64,  ...COUNTRY_CENTERS.ch },
+  { id: "at", name: "Austria",     programs: 47,  ...COUNTRY_CENTERS.at },
+  { id: "pl", name: "Poland",      programs: 112, ...COUNTRY_CENTERS.pl },
+  { id: "cz", name: "Czechia",     programs: 38,  ...COUNTRY_CENTERS.cz },
+  { id: "se", name: "Sweden",      programs: 76,  ...COUNTRY_CENTERS.se },
+  { id: "no", name: "Norway",      programs: 41,  ...COUNTRY_CENTERS.no },
+  { id: "fi", name: "Finland",     programs: 53,  ...COUNTRY_CENTERS.fi },
+  { id: "tr", name: "Turkey",      programs: 125, ...COUNTRY_CENTERS.tr },
+  { id: "cn", name: "China",       programs: 215, ...COUNTRY_CENTERS.cn },
+  { id: "ca", name: "Canada",      programs: 184, ...COUNTRY_CENTERS.ca },
+  { id: "us", name: "USA",         programs: 342, ...COUNTRY_CENTERS.us },
 ];
 
 const PROJECTS: Record<string, any[]> = {
   de: [
-    { id: "p1",  slug: "de-ausbildung",      name: "Ausbildung",          description: "Профессиональное обучение",            city: "Берлин",    lat: 52.5200,  lng: 13.4050  },
-    { id: "p2",  slug: "de-study",           name: "Studium",             description: "Высшее образование",                   city: "Мюнхен",    lat: 48.1351,  lng: 11.5820  },
+    { id: "p1",  slug: "de-ausbildung",      name: "Ausbildung",          description: "Профессиональное обучение",            city: "Берлин",       ...CITY_COORDS.berlin      },
+    { id: "p2",  slug: "de-study",           name: "Studium",             description: "Высшее образование",                   city: "Мюнхен",       ...CITY_COORDS.munich      },
   ],
   fr: [
-    { id: "p3",  slug: "fr-erasmus",         name: "Erasmus+",            description: "Академический обмен",                  city: "Париж",     lat: 48.8566,  lng: 2.3522   },
+    { id: "p3",  slug: "fr-erasmus",         name: "Erasmus+",            description: "Академический обмен",                  city: "Париж",        ...CITY_COORDS.paris       },
   ],
   us: [
-    { id: "p4",  slug: "us-work-travel",     name: "Work & Travel",       description: "Летняя работа для студентов",          city: "Нью-Йорк",  lat: 40.7128,  lng: -74.0060 },
-    { id: "p5",  slug: "us-au-pair",         name: "Au Pair",             description: "Культурный обмен и уход за детьми",    city: "Лос-Анджелес", lat: 34.0522, lng: -118.2437 },
+    { id: "p4",  slug: "us-work-travel",     name: "Work & Travel",       description: "Летняя работа для студентов",          city: "Нью-Йорк",     ...CITY_COORDS.new_york    },
+    { id: "p5",  slug: "us-au-pair",         name: "Au Pair",             description: "Культурный обмен и уход за детьми",    city: "Лос-Анджелес", ...CITY_COORDS.los_angeles },
   ],
   ca: [
-    { id: "p6",  slug: "ca-express-entry",   name: "Express Entry",       description: "Система иммиграции и ПМЖ",             city: "Торонто",   lat: 43.6532,  lng: -79.3832 },
+    { id: "p6",  slug: "ca-express-entry",   name: "Express Entry",       description: "Система иммиграции и ПМЖ",             city: "Торонто",      ...CITY_COORDS.toronto     },
   ],
   pl: [
-    { id: "p7",  slug: "pl-work-visa",       name: "Work Visa",           description: "Работа на заводах и складах",          city: "Варшава",   lat: 52.2297,  lng: 21.0122  },
+    { id: "p7",  slug: "pl-work-visa",       name: "Work Visa",           description: "Работа на заводах и складах",          city: "Варшава",      ...CITY_COORDS.warsaw      },
   ],
   tr: [
-    { id: "p8",  slug: "tr-turkiye-burslari", name: "Türkiye Bursları",   description: "Государственная стипендия",            city: "Анкара",    lat: 39.9334,  lng: 32.8597  },
+    { id: "p8",  slug: "tr-turkiye-burslari", name: "Türkiye Bursları",   description: "Государственная стипендия",            city: "Анкара",       ...CITY_COORDS.ankara      },
   ],
   ch: [
-    { id: "p9",  slug: "ch-hotel-internship", name: "Hotel Internship",   description: "Стажировка в отелях 5*",               city: "Женева",    lat: 46.2044,  lng: 6.1432   },
+    { id: "p9",  slug: "ch-hotel-internship", name: "Hotel Internship",   description: "Стажировка в отелях 5*",               city: "Женева",       ...CITY_COORDS.geneva      },
   ],
   at: [
-    { id: "p10", slug: "at-ausbildung",       name: "Lehre / Ausbildung", description: "Дуальное обучение в Австрии",          city: "Вена",      lat: 48.2082,  lng: 16.3738  },
+    { id: "p10", slug: "at-ausbildung",       name: "Lehre / Ausbildung", description: "Дуальное обучение в Австрии",          city: "Вена",         ...CITY_COORDS.vienna      },
   ],
   se: [
-    { id: "p11", slug: "se-study",            name: "Studium / Master",   description: "Учёба на английском",                 city: "Стокгольм", lat: 59.3293,  lng: 18.0686  },
+    { id: "p11", slug: "se-study",            name: "Studium / Master",   description: "Учёба на английском",                 city: "Стокгольм",    ...CITY_COORDS.stockholm   },
   ],
   no: [
-    { id: "p12", slug: "no-fish-industry",    name: "Fish Industry",      description: "Рыбные заводы Норвегии",               city: "Берген",    lat: 60.3913,  lng: 5.3221   },
+    { id: "p12", slug: "no-fish-industry",    name: "Fish Industry",      description: "Рыбные заводы Норвегии",               city: "Берген",       ...CITY_COORDS.bergen      },
   ],
   fi: [
-    { id: "p13", slug: "fi-berry-picking",    name: "Berry Picking",      description: "Сезонный сбор диких ягод",             city: "Оулу",      lat: 65.0121,  lng: 25.4651  },
+    { id: "p13", slug: "fi-berry-picking",    name: "Berry Picking",      description: "Сезонный сбор диких ягод",             city: "Оулу",         ...CITY_COORDS.oulu        },
   ],
   cn: [
-    { id: "p14", slug: "cn-csc-scholarship",  name: "CSC Scholarship",    description: "Стипендия правительства КНР",          city: "Пекин",     lat: 39.9042,  lng: 116.4074 },
-    { id: "p15", slug: "cn-teaching-english", name: "Teaching English",   description: "Преподавание английского языка",       city: "Шанхай",    lat: 31.2304,  lng: 121.4737 },
+    { id: "p14", slug: "cn-csc-scholarship",  name: "CSC Scholarship",    description: "Стипендия правительства КНР",          city: "Пекин",        ...CITY_COORDS.beijing     },
+    { id: "p15", slug: "cn-teaching-english", name: "Teaching English",   description: "Преподавание английского языка",       city: "Шанхай",       ...CITY_COORDS.shanghai    },
   ],
 };
 
@@ -217,6 +218,7 @@ export default function HomePage() {
 
   const text = translations[lang]?.home || translations.ru.home;
   const navText = translations[lang]?.nav || translations.ru.nav;
+  const embassy = (translations[lang] as any)?.homeEmbassy || (translations.ru as any).homeEmbassy;
 
   const toggleChecklist = (countryId: string, idx: number) => {
     setCheckedItems(prev => {
@@ -275,12 +277,10 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="flex items-center gap-3 text-[13px] font-medium"
           >
-            <Link href="/programs"
-              className="px-4 py-2 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/30 hover:bg-[var(--accent-dim)] transition-all text-[var(--muted)] hover:text-[var(--accent)]">
+            <Link href="/programs" className="btn btn-secondary btn-sm">
               {navText.programs}
             </Link>
-            <Link href="/calculator"
-              className="px-4 py-2 rounded-xl bg-[var(--foreground)] text-[var(--background)] hover:opacity-85 transition-all">
+            <Link href="/calculator" className="btn btn-primary btn-sm">
               {navText.estimator}
             </Link>
           </motion.div>
@@ -298,7 +298,7 @@ export default function HomePage() {
                 <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
                 <input
                   type="text"
-                  placeholder="Поиск страны..."
+                  placeholder={embassy.searchGlobe}
                   value={searchQuery}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -329,7 +329,7 @@ export default function HomePage() {
 
               {/* Dropdown suggestions */}
               {searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1.5 py-1.5 rounded-2xl glass border border-[var(--border)] max-h-56 overflow-y-auto shadow-xl z-50 animate-in fade-in-50 slide-in-from-top-1 duration-200">
+                <div className="absolute top-full left-0 right-0 mt-1.5 py-1.5 rounded-2xl card border-[var(--border)] max-h-56 overflow-y-auto shadow-xl z-50 animate-in fade-in-50 slide-in-from-top-1 duration-200">
                   {searchResults.map((c) => {
                     const trans = COUNTRY_TRANSLATIONS[c.id];
                     const displayName = lang === "ru" ? trans?.ru || c.name : trans?.en || c.name;
@@ -340,7 +340,7 @@ export default function HomePage() {
                         className="w-full text-left px-4 py-2 hover:bg-[var(--accent-dim)]/50 text-xs flex items-center justify-between text-[var(--foreground)] transition-colors"
                       >
                         <span className="font-semibold">{displayName}</span>
-                        <span className="text-[10px] text-[var(--muted)]">{c.programs} программ</span>
+                        <span className="text-[10px] text-[var(--muted)]">{c.programs} {embassy.programsWord}</span>
                       </button>
                     );
                   })}
@@ -372,13 +372,13 @@ export default function HomePage() {
           <div className="p-6 md:p-8 rounded-3xl border border-[var(--border)] bg-[var(--card)]/30 backdrop-blur-xl shadow-xl">
             <div className="max-w-3xl mb-8">
               <span className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] mb-2.5 block">
-                Инструменты WorldBridge
+                {embassy.badge}
               </span>
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--foreground)]">
-                Подготовка документов в посольствах (г. Душанбе)
+                {embassy.title}
               </h2>
               <p className="mt-2 text-sm text-[var(--muted)] leading-relaxed">
-                Интерактивный трекер и официальные требования к визам для граждан Таджикистана. Выберите страну назначения, чтобы увидеть актуальные финансовые лимиты, адреса посольств в Душанбе и отметить готовые документы.
+                {embassy.subtitle}
               </p>
             </div>
 
@@ -390,15 +390,11 @@ export default function HomePage() {
                   onClick={() => setSelectedEmbassy(id)}
                   className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                     selectedEmbassy === id
-                      ? "bg-[var(--foreground)] text-[var(--background)]"
+                      ? "bg-[var(--accent)] text-white shadow-[0_2px_8px_rgba(16,185,129,0.25)]"
                       : "border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)] bg-[var(--card)]/40"
                   }`}
                 >
-                  {id === "de" ? "Германия 🇩🇪" :
-                   id === "fr" ? "Франция 🇫🇷" :
-                   id === "ca" ? "Канада 🇨🇦" :
-                   id === "us" ? "США 🇺🇸" :
-                   "Турция 🇹🇷"}
+                  {(embassy.countries as Record<string,string>)[id] || id.toUpperCase()}
                 </button>
               ))}
             </div>
@@ -408,21 +404,21 @@ export default function HomePage() {
               {/* Stats column */}
               <div className="lg:col-span-1 space-y-4">
                 <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)]/20">
-                  <span className="text-[10px] uppercase font-bold text-[var(--muted)]">Сроки рассмотрения</span>
+                  <span className="text-[10px] uppercase font-bold text-[var(--muted)]">{embassy.processing}</span>
                   <p className="text-xl font-bold text-[var(--foreground)] mt-1">{EMBASSY_DATA[selectedEmbassy].processingWeeks}</p>
                 </div>
                 <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)]/20">
-                  <span className="text-[10px] uppercase font-bold text-[var(--muted)]">Консульский сбор</span>
+                  <span className="text-[10px] uppercase font-bold text-[var(--muted)]">{embassy.consulFee}</span>
                   <p className="text-xl font-bold text-[var(--foreground)] mt-1">{EMBASSY_DATA[selectedEmbassy].visaFee}</p>
                 </div>
                 <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)]/20">
-                  <span className="text-[10px] uppercase font-bold text-[var(--muted)]">Финансовые требования</span>
+                  <span className="text-[10px] uppercase font-bold text-[var(--muted)]">{embassy.financialReq}</span>
                   <p className="text-xs font-semibold text-[var(--foreground)] mt-1 leading-relaxed">
                     {EMBASSY_DATA[selectedEmbassy].blockedAccountRequired}
                   </p>
                 </div>
                 <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)]/20 space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-[var(--muted)] block">Посольство в Душанбе</span>
+                  <span className="text-[10px] uppercase font-bold text-[var(--muted)] block">{embassy.embassyLabel}</span>
                   <div className="flex items-start gap-2">
                     <Building size={14} className="text-[var(--accent)] mt-0.5 shrink-0" />
                     <p className="text-xs text-[var(--muted)] leading-relaxed">{EMBASSY_DATA[selectedEmbassy].embassyName}</p>
@@ -437,7 +433,7 @@ export default function HomePage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-[var(--accent)] hover:underline pt-2 font-medium"
                   >
-                    Официальный сайт посольства <ExternalLink size={11} />
+                    {embassy.officialSite} <ExternalLink size={11} />
                   </a>
                 </div>
               </div>
@@ -448,10 +444,10 @@ export default function HomePage() {
                   <div className="flex items-center justify-between mb-4 border-b border-[var(--border)] pb-3">
                     <span className="text-[13px] font-bold text-[var(--foreground)] flex items-center gap-1.5">
                       <FileText size={14} className="text-[var(--accent)]" />
-                      Чек-лист необходимых документов
+                      {embassy.checklistTitle}
                     </span>
                     <span className="text-xs text-[var(--muted)]">
-                      {Object.values(checkedItems[selectedEmbassy] || {}).filter(Boolean).length} из {EMBASSY_DATA[selectedEmbassy].checklist.length} готово
+                      {Object.values(checkedItems[selectedEmbassy] || {}).filter(Boolean).length} {embassy.readyOf} {EMBASSY_DATA[selectedEmbassy].checklist.length} {embassy.ready}
                     </span>
                   </div>
 

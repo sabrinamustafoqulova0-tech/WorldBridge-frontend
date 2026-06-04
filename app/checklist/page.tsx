@@ -160,7 +160,7 @@ export default function ChecklistPage() {
 
                 {/* Progress card */}
                 {items.length > 0 && (
-                    <div className="glass border border-[var(--border)] rounded-2xl p-5 space-y-3">
+                    <div className="card rounded-2xl p-5 space-y-3">
                         <div className="flex items-center justify-between text-xs font-semibold">
                             <span className="text-[var(--muted)]">Прогресс</span>
                             <span className="text-[var(--accent)]">{doneCount} / {items.length} выполнено</span>

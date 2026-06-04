@@ -125,7 +125,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
       }
     };
     fetchData();
-  }, [countryId, authLoading, isAuthenticated]);
+  }, [countryId, authLoading, isAuthenticated, lang]);
 
   if (authLoading || loading) {
     return (
@@ -189,8 +189,13 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
         >
           <div className="max-w-[1440px] mx-auto flex items-end gap-5">
             {/* Flag bubble */}
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-4xl md:text-5xl shrink-0 shadow-2xl">
-              {country.flag_emoji}
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 shrink-0 shadow-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://flagcdn.com/w160/${country.slug.toLowerCase()}.png`}
+                alt={country.name_en}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="space-y-1.5 pb-1">
               <p className="text-[10px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
@@ -213,7 +218,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-sm md:text-base text-[var(--muted)] leading-relaxed max-w-[70ch] pt-2 pb-12 font-light border-b border-[var(--border)]"
+            className="text-sm md:text-base text-[var(--muted)] leading-relaxed max-w-[70ch] pt-4 pb-12 pl-5 font-light border-l-4 border-[var(--accent)] border-b border-b-[var(--border)] ml-0"
           >
             {countryDesc}
           </motion.p>
@@ -235,7 +240,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
             </div>
 
             {programs.length > 0 ? (
-              <div className="border-t border-[var(--border)]">
+              <div className="space-y-3">
                 {programs.map((program) => {
                   const style = CATEGORY_STYLE[program.category] || {
                     bg: "bg-[var(--border)]",
@@ -246,25 +251,27 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
                     <button
                       key={program.id}
                       onClick={() => handleProgramClick(program.slug)}
-                      className="group w-full text-left flex items-start justify-between gap-6 border-b border-[var(--border)] py-6 hover:bg-[var(--card)] -mx-5 px-5 transition-all duration-200"
+                      className={`group w-full text-left flex items-start justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] py-5 px-5 border-l-4 ${style.border} hover:border-l-[var(--accent)] hover:shadow-[var(--shadow-md)] transition-all duration-200`}
                     >
-                      <div className="flex-1 min-w-0 space-y-3">
+                      <div className="flex-1 min-w-0 space-y-2.5">
                         <div className="flex items-center gap-2">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${style.bg} ${style.text} ${style.border}`}>
                             {program.category}
                           </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted)]">
-                            {LEVEL_LABELS[program.level] || program.level}
-                          </span>
+                          {program.level && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted)]">
+                              {LEVEL_LABELS[program.level] || program.level}
+                            </span>
+                          )}
                         </div>
-                        <h3 className="text-base md:text-lg font-semibold tracking-tight group-hover:text-[var(--accent)] transition-colors line-clamp-1">
+                        <h3 className="text-base font-semibold tracking-tight group-hover:text-[var(--accent)] transition-colors line-clamp-1">
                           {program.title}
                         </h3>
                         <p className="text-sm text-[var(--muted)] leading-relaxed line-clamp-2 max-w-[55ch]">
                           {program.short_description}
                         </p>
                       </div>
-                      <div className="shrink-0 w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all mt-1">
+                      <div className="shrink-0 w-8 h-8 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all mt-1">
                         <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
                       </div>
                     </button>
@@ -298,15 +305,18 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
                       >
                         <button
                           onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                          className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-sm hover:text-[var(--accent)] transition-colors"
+                          className={`w-full flex items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-sm transition-colors ${isOpen ? "bg-[var(--accent-dim)] text-[var(--accent)]" : "hover:text-[var(--accent)]"}`}
                         >
-                          <span className="line-clamp-2">{faq.question}</span>
+                          <div className="flex items-start gap-3">
+                            <span className="text-[11px] font-bold text-[var(--muted)] w-5 shrink-0 mt-0.5">{index + 1}.</span>
+                            <span className="line-clamp-2">{faq.question}</span>
+                          </div>
                           <div className={`shrink-0 text-[var(--muted)] transition-transform duration-300 ${isOpen ? "rotate-180 text-[var(--accent)]" : ""}`}>
                             <ChevronDown size={15} />
                           </div>
                         </button>
                         <div className={`transition-all duration-300 ease-in-out ${isOpen ? "max-h-[300px] border-t border-[var(--border)]" : "max-h-0"} overflow-hidden`}>
-                          <div className="px-5 py-4 text-xs sm:text-sm text-[var(--muted)] leading-relaxed whitespace-pre-line bg-[var(--background)]/30">
+                          <div className="px-5 py-4 text-xs sm:text-sm text-[var(--muted)] leading-relaxed whitespace-pre-line bg-[var(--background-subtle)]">
                             {faq.answer || "Войдите для просмотра ответа на данный вопрос."}
                           </div>
                         </div>
@@ -318,9 +328,7 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
             )}
 
             {/* AI Banner */}
-            <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-xl">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--accent)] rounded-full blur-[80px] opacity-10 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500 rounded-full blur-[80px] opacity-10 pointer-events-none" />
+            <div className="relative overflow-hidden rounded-3xl border border-[var(--accent)]/20 bg-gradient-to-br from-[var(--card)] to-[var(--accent-dim)] p-8 shadow-[var(--shadow-md)]">
 
               <div className="relative z-10 space-y-6">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-dim)] border border-[var(--accent)]/20 text-[var(--accent)] text-[11px] font-semibold">

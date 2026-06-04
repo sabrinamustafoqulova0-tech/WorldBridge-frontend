@@ -202,6 +202,7 @@ export default function LandingPage() {
 
   const text = translations[lang]?.landing || translations.ru.landing;
   const navText = translations[lang]?.nav || translations.ru.nav;
+  const popular = (translations[lang] as any)?.popular || (translations.ru as any).popular;
 
   if (isLoading) {
     return (
@@ -315,7 +316,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Micro stats grid */}
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="flex flex-wrap gap-8 pt-4 border-t border-[var(--border)] max-w-lg"
             >
@@ -324,8 +325,8 @@ export default function LandingPage() {
                 if (idx === 0) value = String(dbStats.countries);
                 if (idx === 1) value = String(dbStats.programs);
                 return (
-                  <div key={s.label} className="space-y-1">
-                    <div className="text-3xl font-black tracking-tight text-[var(--foreground)]">{value}</div>
+                  <div key={s.label} className="space-y-0.5">
+                    <div className="text-4xl font-black tracking-tighter text-[var(--foreground)]">{value}</div>
                     <div className="text-xs text-[var(--muted)] font-medium tracking-wide">{s.label}</div>
                   </div>
                 );
@@ -381,14 +382,14 @@ export default function LandingPage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-3 flex items-center gap-1.5">
               <Sparkles size={12} className="animate-pulse-dot" />
-              Новый старт
+              {popular.badge}
             </p>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight">
-              Популярные направления релокации
+              {popular.title}
             </h2>
           </div>
           <Link href="/countries" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--accent)] hover:opacity-85 transition-opacity">
-            Смотреть все страны <ChevronRight size={14} />
+            {popular.viewAll} <ChevronRight size={14} />
           </Link>
         </div>
 
@@ -396,8 +397,8 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {POPULAR_COUNTRIES.map((c, idx) => (
             <Link href={`/countries/${c.id}`} key={c.id}>
-              <div 
-                className="group relative h-[360px] rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-sm hover:shadow-xl hover:border-[var(--accent)]/30 transition-all duration-300 flex flex-col justify-end p-6 cursor-pointer"
+              <div
+                className="group relative h-[360px] rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-sm hover:shadow-xl hover:border-[var(--accent)]/30 hover:scale-[1.02] transition-all duration-500 flex flex-col justify-end p-6 cursor-pointer"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 {/* Background image container */}
@@ -416,12 +417,12 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{c.flag}</span>
                     <h3 className="font-bold text-lg text-white group-hover:text-[var(--accent)] transition-colors">
-                      {c.name}
+                      {(popular.countries as Record<string,{name:string;description:string}>)?.[c.id]?.name || c.name}
                     </h3>
                   </div>
 
                   <p className="text-xs text-neutral-300 leading-relaxed line-clamp-2">
-                    {c.description}
+                    {(popular.countries as Record<string,{name:string;description:string}>)?.[c.id]?.description || c.description}
                   </p>
 
                   <div className="pt-2 border-t border-white/10 flex items-center justify-between">
@@ -429,7 +430,7 @@ export default function LandingPage() {
                       {c.programs.split(",")[0]}
                     </span>
                     <span className="text-white text-[10px] font-medium opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all flex items-center gap-1">
-                      Подробнее <ArrowRight size={10} />
+                      {popular.viewMore} <ArrowRight size={10} />
                     </span>
                   </div>
                 </div>
@@ -481,20 +482,19 @@ export default function LandingPage() {
 
           {/* Card 2 — NARROW stat card: success rate → /programs */}
           <Link href="/programs" className="md:col-span-5 group relative rounded-3xl overflow-hidden border border-[var(--accent)]/20 bg-[var(--accent-dim)] flex flex-col justify-between p-8 h-[320px] block">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)] rounded-full blur-[80px] opacity-20 pointer-events-none" />
             <div className="space-y-1">
               <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)]">Успешность</p>
               <p className="text-xs text-[var(--muted)] max-w-[30ch]">проверенная статистика зачислений</p>
             </div>
             <div>
-              <div className="text-[80px] font-black leading-none tracking-tighter text-[var(--accent)]">91<span className="text-4xl">.3%</span></div>
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="text-[96px] font-black leading-none tracking-tighter text-[var(--accent)]">91<span className="text-5xl">.3%</span></div>
+              <div className="mt-4 pt-4 border-t border-[var(--accent)]/20 flex flex-col gap-2">
                 {[
                   "Прямая подача документов без посредников",
                   `${dbStats.programs} активных программ в каталоге`,
                   "Полное юридическое и визовое сопровождение"
                 ].map(s => (
-                  <div key={s} className="flex items-center gap-2 text-xs text-[var(--muted)] animate-fade-in">
+                  <div key={s} className="flex items-center gap-2 text-xs text-[var(--muted)]">
                     <CheckCircle size={11} className="text-[var(--accent)] shrink-0" />
                     {s}
                   </div>
@@ -515,8 +515,8 @@ export default function LandingPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute inset-0 p-7 flex flex-col justify-between">
-              <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center">
-                <Briefcase size={17} className="text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 flex items-center justify-center">
+                <Briefcase size={17} className="text-[var(--accent)]" />
               </div>
               <div className="space-y-1.5">
                 <h3 className="text-xl font-black text-white tracking-tight group-hover:text-[var(--accent)] transition-colors">{text.program2}</h3>
@@ -537,8 +537,8 @@ export default function LandingPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute inset-0 p-7 flex flex-col justify-between">
-              <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center">
-                <Languages size={17} className="text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-[var(--accent)]/20 border border-[var(--accent)]/30 flex items-center justify-center">
+                <Languages size={17} className="text-[var(--accent)]" />
               </div>
               <div className="space-y-1.5">
                 <h3 className="text-xl font-black text-white tracking-tight group-hover:text-[var(--accent)] transition-colors">Языковые курсы</h3>
@@ -570,21 +570,50 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Footer ──────────────────────────────────────────────── */}
-      <footer className="border-t border-[var(--border)] py-8 px-4 md:px-6 relative z-10">
-        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[var(--accent)] flex items-center justify-center">
-              <LogoMark size={12} className="text-white" />
+      <footer className="border-t border-[var(--border)] pt-12 pb-8 px-4 md:px-6 relative z-10">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-[var(--border)]">
+            {/* Brand */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
+                  <LogoMark size={13} className="text-white" />
+                </div>
+                <span className="font-bold text-base">WorldBridge</span>
+              </div>
+              <p className="text-xs text-[var(--muted)] leading-relaxed max-w-[28ch]">
+                Платформа для жителей Таджикистана, Узбекистана и стран СНГ
+              </p>
             </div>
-            <span className="font-bold text-sm">WorldBridge</span>
+            {/* Navigation */}
+            <div className="space-y-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)]">Навигация</p>
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+                {[
+                  { href: "/countries",       label: "Страны" },
+                  { href: "/programs",        label: "Программы" },
+                  { href: "/articles",        label: "Статьи" },
+                  { href: "/calculator",      label: "Калькулятор" },
+                  { href: "/language-courses",label: "Курсы языков" },
+                  { href: "/checklist",       label: "Чеклист" },
+                ].map(({ href, label }) => (
+                  <Link key={href} href={href} className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">{label}</Link>
+                ))}
+              </div>
+            </div>
+            {/* Account */}
+            <div className="space-y-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)]">Аккаунт</p>
+              <div className="flex flex-col gap-2">
+                <Link href="/register" className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">Регистрация</Link>
+                <Link href="/login"    className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">Войти</Link>
+                <Link href="/profile"  className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">Профиль</Link>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-[var(--muted)]">
-            &copy; {new Date().getFullYear()} WorldBridge. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6 text-xs text-[var(--muted)]">
-            <Link href="/countries" className="hover:text-[var(--foreground)] transition-colors">Страны</Link>
-            <Link href="/programs" className="hover:text-[var(--foreground)] transition-colors">Программы</Link>
-            <Link href="/calculator" className="hover:text-[var(--foreground)] transition-colors">Калькулятор</Link>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6">
+            <p className="text-xs text-[var(--muted)]">&copy; {new Date().getFullYear()} WorldBridge. All rights reserved.</p>
+            <p className="text-[11px] text-[var(--muted)] opacity-60">Для жителей Таджикистана, Узбекистана и СНГ</p>
           </div>
         </div>
       </footer>

@@ -99,7 +99,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Table */}
-        <div className="glass border border-[var(--border)] rounded-2xl overflow-hidden">
+        <div className="card overflow-hidden">
           {loading ? (
             <div className="py-20 flex justify-center">
               <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
@@ -108,7 +108,7 @@ export default function AdminUsersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs md:text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--border)] bg-[var(--border)]/5 text-[var(--muted)] font-semibold">
+                  <tr className="border-b border-[var(--border)] bg-[var(--background-subtle)] text-[var(--muted)] text-xs font-semibold sticky top-0">
                     <th className="p-4">Пользователь</th>
                     <th className="p-4">Email</th>
                     <th className="p-4 text-center">Роль</th>
@@ -116,9 +116,9 @@ export default function AdminUsersPage() {
                     <th className="p-4 text-center">Действия</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border)]/60">
+                <tbody className="divide-y divide-[var(--border)]">
                   {filtered.map((u) => (
-                    <tr key={u.id} className="hover:bg-[var(--border)]/5 transition-colors">
+                    <tr key={u.id} className="hover:bg-[var(--background-subtle)] transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
                           <Initials name={u.full_name || u.email} />
