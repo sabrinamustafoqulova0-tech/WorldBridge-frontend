@@ -15,6 +15,7 @@ import {
   BookOpen,
   Globe,
   Shield,
+  X,
 } from "lucide-react";
 import api from "../../lib/api";
 
@@ -34,6 +35,15 @@ interface CalculatorResult {
   city: string;
 }
 
+interface Program {
+  slug: string;
+  title: string;
+  category: string;
+  duration_months: number | null;
+  language_requirement: string | null;
+  salary_range: string | null;
+}
+
 const COUNTRIES = [
   { code: "de", flag: "🇩🇪", name: "Германия" },
   { code: "fr", flag: "🇫🇷", name: "Франция" },
@@ -50,6 +60,19 @@ const COUNTRIES = [
   { code: "ca", flag: "🇨🇦", name: "Канада" },
   { code: "us", flag: "🇺🇸", name: "США" },
 ];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  AUSBILDUNG: "Аусбильдунг",
+  FSJ: "FSJ",
+  AU_PAIR: "Au Pair",
+  SCHULE: "Школа",
+  ARBEIT: "Работа",
+  STUDIUM: "Учёба",
+  VOLUNTEERING: "Волонтёрство",
+  INTERNSHIP: "Стажировка",
+  LANGUAGE: "Языковые курсы",
+  IMMIGRATION: "Иммиграция",
+};
 
 const inputCls =
   "w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]";
@@ -78,9 +101,19 @@ export default function CalculatorPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculatorResult | null>(null);
 
+  // ── Modal state ──────────────────────────────────────────────────────────
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalPrograms, setModalPrograms] = useState<Program[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+
   const selectedCountry = COUNTRIES.find((c) => c.code === country)!;
 
-  const handleCalculate = async () => {
+  const handleCalculate = async (overrides?: {
+    visa_fee?: number;
+    flight_cost?: number;
+    language_course_months?: number;
+  }) => {
     if (monthlyRent <= 0) {
       setError("Укажите стоимость аренды жилья.");
       return;
@@ -95,10 +128,10 @@ export default function CalculatorPage() {
         utilities_included: utilitiesIncluded,
         misc_monthly: miscMonthly,
         health_insurance_monthly: healthInsurance,
-        visa_fee: visaFee,
+        visa_fee: overrides?.visa_fee ?? visaFee,
         document_legalisation_cost: docCost,
-        flight_cost: flightCost,
-        language_course_months: langMonths,
+        flight_cost: overrides?.flight_cost ?? flightCost,
+        language_course_months: overrides?.language_course_months ?? langMonths,
         language_course_price_per_month: langPrice,
         months_of_savings: monthsBuffer,
       });
@@ -108,6 +141,36 @@ export default function CalculatorPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openModal = async (code: string) => {
+    setCountry(code);
+    setSelectedProgram(null);
+    setModalOpen(true);
+    setModalLoading(true);
+    setModalPrograms([]);
+    try {
+      const { data } = await api.get(`/programs?country_slug=${code}&size=20`);
+      setModalPrograms(data.items ?? []);
+    } catch {
+      setModalPrograms([]);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleProgramSelect = (program: Program) => {
+    const hasLang = Boolean(program.language_requirement?.trim());
+    const newVisaFee = 75;
+    const newFlightCost = 300;
+    const newLangMonths = hasLang ? 3 : langMonths;
+
+    setVisaFee(newVisaFee);
+    setFlightCost(newFlightCost);
+    setLangMonths(newLangMonths);
+    setSelectedProgram(program);
+    setModalOpen(false);
+    handleCalculate({ visa_fee: newVisaFee, flight_cost: newFlightCost, language_course_months: newLangMonths });
   };
 
   return (
@@ -134,6 +197,21 @@ export default function CalculatorPage() {
         {/* ── LEFT: FORM ──────────────────────────────────────────────── */}
         <div className="lg:col-span-7 space-y-5">
 
+          {/* Selected program banner */}
+          {selectedProgram && (
+            <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--accent)]">Выбранная программа</p>
+                <p className="text-xs font-semibold truncate mt-0.5">{selectedProgram.title}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedProgram(null)}
+                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--border)] transition-all text-sm"
+              >×</button>
+            </div>
+          )}
+
           {/* Destination */}
           <div className="card rounded-2xl p-5 space-y-4">
             <h2 className="text-sm font-bold tracking-tight">Страна и город</h2>
@@ -144,7 +222,7 @@ export default function CalculatorPage() {
               <div className="relative">
                 <select
                   value={country}
-                  onChange={(e) => setCountry(e.target.value)}
+                  onChange={(e) => openModal(e.target.value)}
                   className={inputCls + " appearance-none pr-9"}
                 >
                   {COUNTRIES.map((c) => (
@@ -341,7 +419,7 @@ export default function CalculatorPage() {
 
           <button
             type="button"
-            onClick={handleCalculate}
+            onClick={() => handleCalculate()}
             disabled={loading}
             className="w-full py-3.5 rounded-xl bg-[var(--accent)] text-white font-bold text-sm hover:bg-emerald-500 transition-all disabled:opacity-60 shadow-[0_4px_14px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2"
           >
@@ -362,7 +440,7 @@ export default function CalculatorPage() {
         {/* ── RIGHT: RESULT ────────────────────────────────────────────── */}
         <div className="lg:col-span-5 space-y-5">
 
-          {/* Empty / loading / error state */}
+          {/* Empty / loading state */}
           {!result && (
             <div className="card rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3 min-h-[220px]">
               {loading ? (
@@ -527,6 +605,86 @@ export default function CalculatorPage() {
           )}
         </div>
       </div>
+
+      {/* ── PROGRAMS MODAL ──────────────────────────────────────────────── */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="card rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-[var(--border)] shrink-0">
+              <div>
+                <h3 className="font-bold text-sm">
+                  Программы — {selectedCountry.flag} {selectedCountry.name}
+                </h3>
+                <p className="text-[11px] text-[var(--muted)] mt-0.5">Выберите программу для автозаполнения формы</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--border)] transition-all"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+              {modalLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-7 h-7 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+                </div>
+              )}
+              {!modalLoading && modalPrograms.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
+                  <Globe size={28} className="text-[var(--muted)]" />
+                  <p className="text-sm font-semibold">Программ не найдено</p>
+                  <p className="text-xs text-[var(--muted)]">Попробуйте другую страну или введите данные вручную</p>
+                </div>
+              )}
+              {!modalLoading && modalPrograms.map((prog) => (
+                <button
+                  key={prog.slug}
+                  type="button"
+                  onClick={() => handleProgramSelect(prog)}
+                  className="w-full text-left p-4 rounded-xl border border-[var(--border)] hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all group"
+                >
+                  <p className="text-xs font-bold leading-snug group-hover:text-[var(--accent)] transition-colors">
+                    {prog.title}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)]">
+                      {CATEGORY_LABELS[prog.category] ?? prog.category}
+                    </span>
+                    {prog.salary_range && (
+                      <span className="text-[10px] text-[var(--muted)] font-medium">{prog.salary_range}</span>
+                    )}
+                    {prog.duration_months && (
+                      <span className="text-[10px] text-[var(--muted)]">{prog.duration_months} мес.</span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-[var(--border)] shrink-0">
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="w-full py-2.5 rounded-xl border border-[var(--border)] text-xs font-bold text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--foreground)]/30 transition-all"
+              >
+                Ввести вручную
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
