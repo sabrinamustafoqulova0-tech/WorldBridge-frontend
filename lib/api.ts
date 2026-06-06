@@ -37,7 +37,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
 
-        const { data } = await axios.post("http://127.0.0.1:8000/api/v1/auth/refresh", {
+        const { data } = await axios.post("https://worldbridge-backend.onrender.com/api/v1/auth/refresh", {
           refresh_token: refreshToken
         });
 
