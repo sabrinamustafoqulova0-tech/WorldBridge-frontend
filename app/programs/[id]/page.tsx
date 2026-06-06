@@ -128,11 +128,18 @@ const LEVEL_LABELS: Record<string, string> = {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function ImageGallery({ images, coverUrl }: { images: ProgramImage[]; coverUrl?: string }) {
+function ImageGallery({ images, coverUrl, coverUrl2, coverUrl3 }: { 
+  images: ProgramImage[]; 
+  coverUrl?: string;
+  coverUrl2?: string;
+  coverUrl3?: string;
+}) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   const allImages = [
-    ...(coverUrl ? [{ id: -1, url: coverUrl, caption_ru: "Обложка", display_order: -1 }] : []),
+    ...(coverUrl ? [{ id: -1, url: coverUrl, caption_ru: "Фото 1", display_order: -1 }] : []),
+    ...(coverUrl2 ? [{ id: -2, url: coverUrl2, caption_ru: "Фото 2", display_order: -2 }] : []),
+    ...(coverUrl3 ? [{ id: -3, url: coverUrl3, caption_ru: "Фото 3", display_order: -3 }] : []),
     ...images,
   ];
 
@@ -159,7 +166,6 @@ function ImageGallery({ images, coverUrl }: { images: ProgramImage[]; coverUrl?:
           </button>
         ))}
       </div>
-      {/* Lightbox */}
       {lightbox && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
@@ -572,8 +578,12 @@ export default function ProgramPage(props: { params: Promise<{ id: string }> }) 
           <div className="space-y-10">
 
             {/* Image Gallery (only if images exist) */}
-            <ImageGallery images={images} coverUrl={program.cover_image_url || undefined} />
-
+<ImageGallery 
+  images={images} 
+  coverUrl={program.cover_image_url || undefined}
+  coverUrl2={(program as any).cover_image_url_2 || undefined}
+  coverUrl3={(program as any).cover_image_url_3 || undefined}
+/>
             {/* Main Description */}
             <section className="space-y-4">
               <h2 className="text-lg font-bold tracking-tight">Описание программы</h2>
