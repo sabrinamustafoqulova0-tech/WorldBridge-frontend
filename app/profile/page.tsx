@@ -2,6 +2,7 @@
 
 import { useAuthStore } from "../../store/authStore";
 import { useLangStore } from "../../store/langStore";
+import { getLocalizedField } from "../../utils/langHelper";
 import { translations } from "../../locales/translations";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -149,6 +150,7 @@ export default function ProfilePage() {
   const { lang } = useLangStore();
   const router = useRouter();
   const text = (translations[lang] as any)?.profile || (translations.ru as any).profile;
+  const catNames: Record<string, string> = (translations[lang] as any)?.programsList?.categories || (translations.ru as any).programsList.categories;
 
   const [favorites, setFavorites] = useState<FavoriteProgram[]>([]);
   const [checklistTotal, setChecklistTotal] = useState(0);
@@ -447,7 +449,7 @@ export default function ProfilePage() {
             <ul className="divide-y divide-[var(--border)]">
               {favorites.slice(0, 6).map(fav => {
                 const catStyle = CATEGORY_STYLE[(fav.program?.category || "").toUpperCase()] || "text-[var(--muted)] bg-transparent border-[var(--border)]";
-                const catLabel = CATEGORY_LABEL[(fav.program?.category || "").toUpperCase()] || fav.program?.category;
+                const catLabel = catNames[(fav.program?.category || "").toUpperCase()] || fav.program?.category;
                 return (
                   <li key={fav.id} className="group">
                     <Link
@@ -464,10 +466,10 @@ export default function ProfilePage() {
                           </span>
                         </div>
                         <p className="text-[13px] font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors truncate">
-                          {fav.program?.title}
+                          {getLocalizedField(fav.program, 'title', lang)}
                         </p>
                         <p className="text-[11px] text-[var(--muted)] truncate mt-0.5">
-                          {fav.program?.short_description}
+                          {getLocalizedField(fav.program, 'short_description', lang)}
                         </p>
                       </div>
                       <ArrowRight size={13} className="text-[var(--muted)] group-hover:text-[var(--accent)] shrink-0 transition-colors" />
@@ -499,7 +501,7 @@ export default function ProfilePage() {
             <p className="text-[12px] text-[var(--muted)] mb-4">
               На основе ваших избранных — больше программ категории{" "}
               <span className="font-semibold text-[var(--foreground)]">
-                «{CATEGORY_LABEL[topCategory] || topCategory}»
+                «{catNames[topCategory] || topCategory}»
               </span>
             </p>
             <Link

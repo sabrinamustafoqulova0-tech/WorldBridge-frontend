@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "../../lib/api";
 import { useLangStore } from "../../store/langStore";
 import { translations } from "../../locales/translations";
+import { getLocalizedField } from "../../utils/langHelper";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -76,7 +77,7 @@ export default function ArticlesListPage() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as any },
     },
   };
 
@@ -209,10 +210,10 @@ export default function ArticlesListPage() {
                       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                         <div className="space-y-2">
                           <h3 className="font-bold text-sm leading-snug group-hover:text-[var(--accent)] transition-colors line-clamp-2">
-                            {article.title}
+                            {getLocalizedField(article, 'title', lang)}
                           </h3>
                           <p className="text-xs text-[var(--muted)] leading-relaxed line-clamp-3">
-                            {article.excerpt}
+                            {getLocalizedField(article, 'excerpt', lang)}
                           </p>
                         </div>
 

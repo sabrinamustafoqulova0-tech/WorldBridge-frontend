@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import api from "../../../lib/api";
 import { useAuthStore } from "../../../store/authStore";
+import { useScrollLock } from "../../../utils/useScrollLock";
 
 type SuggestionStatus = "pending" | "approved" | "rejected";
 
@@ -53,6 +54,8 @@ export default function AdminSuggestionsPage() {
 
   const [selected, setSelected] = useState<Suggestion | null>(null);
   const [reviewing, setReviewing] = useState(false);
+
+  useScrollLock(selected !== null);
   const [reviewStatus, setReviewStatus] = useState<"approved" | "rejected">("approved");
   const [reviewComment, setReviewComment] = useState("");
   const [reviewError, setReviewError] = useState("");
@@ -240,9 +243,9 @@ export default function AdminSuggestionsPage() {
       {/* Detail drawer */}
       {selected && (
         <div className="fixed inset-0 z-[100]">
-          <div onClick={() => setSelected(null)} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div onClick={() => setSelected(null)} className="absolute inset-0 bg-black/50 backdrop-blur-sm" style={{ touchAction: "none" }} />
 
-          <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-[var(--background)] border-l border-[var(--border)] shadow-2xl overflow-y-auto animate-slide-left">
+          <div data-lenis-prevent className="absolute inset-y-0 right-0 w-full max-w-xl bg-[var(--background)] border-l border-[var(--border)] shadow-2xl overflow-y-auto animate-slide-left">
 
             {/* Header — sticky */}
             <div className="sticky top-0 z-10 px-6 py-4 border-b border-[var(--border)] bg-[var(--background)] flex items-center justify-between">

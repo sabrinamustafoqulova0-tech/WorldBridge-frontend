@@ -260,15 +260,15 @@ export default function CountryPage(props: { params: Promise<{ id: string }> }) 
                           </span>
                           {program.level && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted)]">
-                              {LEVEL_LABELS[program.level] || program.level}
+                              {(text as any)?.levelLabels?.[program.level] || (translations[lang] as any)?.programs?.levels?.[program.level] || LEVEL_LABELS[program.level] || program.level}
                             </span>
                           )}
                         </div>
                         <h3 className="text-base font-semibold tracking-tight group-hover:text-[var(--accent)] transition-colors line-clamp-1">
-                          {program.title}
+                          {getLocalizedField(program, 'title', lang)}
                         </h3>
                         <p className="text-sm text-[var(--muted)] leading-relaxed line-clamp-2 max-w-[55ch]">
-                          {program.short_description}
+                          {getLocalizedField(program, 'short_description', lang)}
                         </p>
                       </div>
                       <div className="shrink-0 w-8 h-8 rounded-xl border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:bg-[var(--accent-dim)] transition-all mt-1">

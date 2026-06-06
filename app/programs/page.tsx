@@ -13,6 +13,8 @@ import {
 import AuthGateModal from "../../components/AuthGateModal";
 import { CountryFlag } from "../../components/CountryFlag";
 import { translations } from "../../locales/translations";
+import { useScrollLock } from "../../utils/useScrollLock";
+import { getLocalizedField } from "../../utils/langHelper";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -71,19 +73,21 @@ function getCategoryConfig(cat: string) {
   };
 }
 
-function formatDuration(months: number | null) {
+function formatDuration(months: number | null, t: any, lang: string) {
   if (!months) return null;
-  if (months < 12) return `${months} мес.`;
+  if (months < 12) return `${months} ${t?.months ?? "мес."}`;
   const y = Math.floor(months / 12);
   const m = months % 12;
-  if (m === 0) return `${y} ${y === 1 ? "год" : y < 5 ? "года" : "лет"}`;
-  return `${y} г. ${m} м.`;
+  let yearWord = t?.yearUnit ?? "лет";
+  if (lang === "ru") yearWord = y === 1 ? "год" : y < 5 ? "года" : "лет";
+  if (m === 0) return `${y} ${yearWord}`;
+  return `${y} ${t?.yearShort ?? "г."} ${m} ${t?.monthShort ?? "м."}`;
 }
 
-function formatAge(min: number | null, max: number | null) {
+function formatAge(min: number | null, max: number | null, t: any) {
   if (!min && !max) return null;
-  if (!max) return `от ${min}`;
-  return `${min}–${max} лет`;
+  if (!max) return `${t?.ageFrom ?? "от"} ${min}`;
+  return `${min}–${max} ${t?.ageSuffix ?? "лет"}`;
 }
 
 function getTopPros(pros: string | null, max = 2): string[] {
@@ -137,6 +141,7 @@ function ProgramCard({
   catLabel,
   clarifyConditions,
   lang,
+  programsT,
 }: {
   program: Program;
   isFav: boolean;
@@ -146,11 +151,12 @@ function ProgramCard({
   catLabel?: string;
   clarifyConditions?: string;
   lang?: string;
+  programsT?: any;
 }) {
   const cat = getCategoryConfig(program.category);
   const pros = getTopPros(program.pros, 2);
-  const duration = formatDuration(program.duration_months);
-  const age = formatAge(program.min_age, program.max_age);
+  const duration = formatDuration(program.duration_months, programsT, lang ?? "ru");
+  const age = formatAge(program.min_age, program.max_age, programsT);
   const deadline = shortenDeadline(program.deadline);
 
   return (
@@ -198,17 +204,17 @@ function ProgramCard({
           {catLabel || cat.label}
         </span>
         {program.country_slug && (
-          <CountryFlag slug={program.country_slug} showName size="sm" lang={(lang as "ru" | "en" | "tg") || "ru"} />
+          <CountryFlag slug={program.country_slug} showName size="sm" lang={(lang as "ru" | "en" | "tj") || "ru"} />
         )}
       </div>
 
       {/* ── Title + description ───────────────────────── */}
       <div className="px-4 pt-2.5 pb-3">
         <h3 className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors leading-snug mb-1.5 line-clamp-2">
-          {program.title}
+          {getLocalizedField(program, 'title', (lang as any) || 'ru')}
         </h3>
         <p className="text-xs text-[var(--muted)] leading-relaxed line-clamp-2">
-          {program.short_description}
+          {getLocalizedField(program, 'short_description', (lang as any) || 'ru')}
         </p>
       </div>
 
@@ -298,10 +304,7 @@ function SuggestProgramModal({ onClose }: { onClose: () => void }) {
     "w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--foreground)] " +
     "focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]";
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
+  useScrollLock(true);
 
   const [form, setForm] = useState({
     submitter_name: "",
@@ -366,16 +369,16 @@ function SuggestProgramModal({ onClose }: { onClose: () => void }) {
 
   return (
     /* Оверлей сам скролится — это единственный надёжный паттерн */
-    <div className="fixed inset-0 z-[200] overflow-y-auto">
+    <div data-lenis-prevent className="fixed inset-0 z-[200] overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         {/* Backdrop остаётся fixed, не скролится */}
-        <div onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+        <div onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm" style={{ touchAction: "none" }} />
 
         {/* Панель модалки — естественная высота, без ограничений */}
         <div className="relative w-full max-w-lg bg-[var(--background)] border border-[var(--border)] rounded-2xl shadow-2xl animate-fade-in overflow-hidden">
 
           {/* Header */}
-          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between sticky top-0 bg-[var(--background)] z-10">
+          <div className="px-6 py-4 border-b border-[var(--border)]  flex items-center justify-between sticky top-0 bg-[var(--background)] z-10">
             <div>
               <h2 className="text-base font-bold">Предложить программу</h2>
               <p className="text-[11px] text-[var(--muted)] mt-0.5">Знаете интересную программу? Расскажите нам!</p>
@@ -750,6 +753,7 @@ export default function ProgramsPage() {
                 catLabel={(text.categories as Record<string, string>)?.[(program.category || "").toUpperCase()]}
                 clarifyConditions={text.clarifyConditions}
                 lang={lang}
+                programsT={(translations[lang] as any)?.programs || (translations.ru as any).programs}
               />
             ))}
           </div>

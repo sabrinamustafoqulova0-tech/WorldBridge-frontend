@@ -3,7 +3,7 @@ import { useAuthStore } from "../store/authStore";
 import { useLangStore } from "../store/langStore";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/v1",
+  baseURL: "https://worldbridge-backend.onrender.com/api/v1",
 });
 
 // Request interceptor: add Authorization header + inject lang into GET requests
@@ -28,11 +28,11 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
@@ -40,9 +40,9 @@ api.interceptors.response.use(
         const { data } = await axios.post("http://127.0.0.1:8000/api/v1/auth/refresh", {
           refresh_token: refreshToken
         });
-        
+
         useAuthStore.getState().setTokens(data.access_token);
-        
+
         // Retry the original request with new token
         originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
         return api(originalRequest);
@@ -53,7 +53,7 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

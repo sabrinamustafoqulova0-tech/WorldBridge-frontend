@@ -25,7 +25,7 @@ interface CountryFlagProps {
   slug: string;
   size?: keyof typeof SIZE_CLS;
   showName?: boolean;
-  lang?: "ru" | "en";
+  lang?: "ru" | "en" | "tj";
   className?: string;
 }
 

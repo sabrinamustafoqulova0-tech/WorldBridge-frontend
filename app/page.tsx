@@ -203,6 +203,7 @@ export default function LandingPage() {
   const text = translations[lang]?.landing || translations.ru.landing;
   const navText = translations[lang]?.nav || translations.ru.nav;
   const popular = (translations[lang] as any)?.popular || (translations.ru as any).popular;
+  const t = text as any;
 
   if (isLoading) {
     return (
@@ -230,7 +231,7 @@ export default function LandingPage() {
       opacity: 1,
       transition: {
         duration: 0.8,
-        ease: [0.16, 1, 0.3, 1],
+        ease: [0.16, 1, 0.3, 1] as any,
       },
     },
   };
@@ -277,7 +278,7 @@ export default function LandingPage() {
             <motion.div variants={itemVariants} className="flex items-center gap-2">
               <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-dim)] text-[var(--accent)] text-xs font-semibold tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse-dot" />
-                {dbStats.countries} стран — {dbStats.programs} программ
+                {dbStats.countries} {t.statsCountriesUnit} — {dbStats.programs} {t.statsProgramsUnit}
               </span>
             </motion.div>
 
@@ -324,10 +325,11 @@ export default function LandingPage() {
                 let value = s.value;
                 if (idx === 0) value = String(dbStats.countries);
                 if (idx === 1) value = String(dbStats.programs);
+                const label = idx === 0 ? t.statsCountriesUnit : idx === 1 ? t.statsProgramsUnit : t.statsApplications;
                 return (
-                  <div key={s.label} className="space-y-0.5">
+                  <div key={idx} className="space-y-0.5">
                     <div className="text-4xl font-black tracking-tighter text-[var(--foreground)]">{value}</div>
-                    <div className="text-xs text-[var(--muted)] font-medium tracking-wide">{s.label}</div>
+                    <div className="text-xs text-[var(--muted)] font-medium tracking-wide">{label || s.label}</div>
                   </div>
                 );
               })}
@@ -444,7 +446,7 @@ export default function LandingPage() {
       <section className="py-24 px-4 md:px-6 max-w-[1440px] mx-auto w-full relative z-10 border-t border-[var(--border)]">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-3">Возможности</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-3">{t.featuresLabel}</p>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight">
               {text.programs}
             </h2>
@@ -474,7 +476,7 @@ export default function LandingPage() {
                 <h3 className="text-2xl font-black text-white tracking-tight group-hover:text-[var(--accent)] transition-colors">{text.program1}</h3>
                 <p className="text-sm text-white/65 leading-relaxed max-w-[44ch]">{text.desc1}</p>
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
-                  Выбрать страну <ArrowRight size={11} />
+                  {t.pickCountry} <ArrowRight size={11} />
                 </span>
               </div>
             </div>

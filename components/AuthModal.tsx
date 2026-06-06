@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { X, Lock, LogIn, UserPlus } from "lucide-react";
+import { useScrollLock } from "../utils/useScrollLock";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+  useScrollLock(isOpen);
+
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -19,22 +22,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-modal="true" role="dialog">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" aria-modal="true" role="dialog">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} style={{ touchAction: "none" }} />
 
-      <div className="relative z-10 w-full max-w-sm max-h-[90dvh] flex flex-col bg-[var(--background)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden">
+      <div data-lenis-prevent className="relative z-10 w-full max-w-sm max-h-[90dvh] flex flex-col bg-[var(--background)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden">
         {/* Ambient glow */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 pointer-events-none" />
 

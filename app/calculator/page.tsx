@@ -22,6 +22,7 @@ import {
   ArrowRight,
   DollarSign
 } from "lucide-react";
+import { useScrollLock } from "../../utils/useScrollLock";
 
 interface Offer {
   id: string;
@@ -100,6 +101,8 @@ export default function CalculatorPage() {
   const [showOffersList, setShowOffersList] = useState(false);
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null);
 
+  useScrollLock(isModalOpen);
+
   const navText = translations[lang]?.nav || translations.ru.nav;
   const calc = (translations[lang] as any)?.calculator || (translations.ru as any).calculator;
   const countryDisplayName = (c: string) => (calc.countryNames as Record<string, string>)?.[c] || c;
@@ -123,15 +126,6 @@ export default function CalculatorPage() {
     { label: calc.insurance, icon: <Activity size={14} />, amount: country.insurance * rate, color: "text-rose-500 bg-rose-500/10 border-rose-500/20" },
     { label: calc.internet, icon: <Wifi size={14} />, amount: country.internet * rate, color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
   ];
-
-  useEffect(() => {
-    if (isModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [isModalOpen]);
 
   const handleCountryClick = (c: string) => {
     if (c === selectedCountry && activeOffer) return;
@@ -421,110 +415,116 @@ export default function CalculatorPage() {
 
       {/* Modern High-End Offers Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto animate-in fade-in duration-200">
-          <div className="flex min-h-full items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
+        <div data-lenis-prevent className="fixed inset-0 z-[100] overflow-y-auto animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div
+            onClick={() => setIsModalOpen(false)}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md"
+            style={{ touchAction: "none" }}
+          />
 
-          <div className="w-full max-w-md bg-[var(--background)] ring-1 ring-[var(--border)] p-5 rounded-2xl flex flex-col shadow-2xl relative overflow-hidden transition-all">
+          <div className="flex min-h-full items-center justify-center p-4 relative pointer-events-none">
+            <div className="w-full max-w-md bg-[var(--background)] ring-1 ring-[var(--border)] p-5 rounded-2xl flex flex-col shadow-2xl relative overflow-hidden transition-all pointer-events-auto">
 
-            {/* Ambient glows inside modal */}
-            <div className="absolute top-0 right-1/4 w-[150px] h-[150px] bg-[var(--accent)]/10 rounded-full blur-[40px] pointer-events-none" />
+              {/* Ambient glows inside modal */}
+              <div className="absolute top-0 right-1/4 w-[150px] h-[150px] bg-[var(--accent)]/10 rounded-full blur-[40px] pointer-events-none" />
 
-            <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className="flex items-center gap-2">
-                <div className="bg-[var(--accent)] text-white p-1.5 rounded-lg">
-                  <Sparkles size={14} />
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <div className="flex items-center gap-2">
+                  <div className="bg-[var(--accent)] text-white p-1.5 rounded-lg">
+                    <Sparkles size={14} />
+                  </div>
+                  <h3 className="font-bold text-sm tracking-tight">WorldBridge Программы</h3>
                 </div>
-                <h3 className="font-bold text-sm tracking-tight">WorldBridge Программы</h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-7 h-7 rounded-lg border border-[var(--border)] hover:bg-[var(--border)]/20 transition flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)]"
+                >
+                  <X size={14} />
+                </button>
               </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="w-7 h-7 rounded-lg border border-[var(--border)] hover:bg-[var(--border)]/20 transition flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)]"
-              >
-                <X size={14} />
-              </button>
-            </div>
 
-            <div className="relative z-10">
-              {!showOffersList ? (
-                // Choose Offer vs Continue Manually
-                <div className="space-y-4">
-                  <p className="text-xs text-[var(--muted)] leading-relaxed">
-                    Вы выбрали страну: <strong className="text-[var(--foreground)]">{pendingCountry}</strong>.<br /><br />
-                    На нашей платформе есть готовые, проверенные программы стажировок и обучения для этого направления.
-                    Вы можете автоматически загрузить параметры программы в калькулятор или настроить все расходы вручную.
-                  </p>
+              <div className="relative z-10">
+                {!showOffersList ? (
+                  // Choose Offer vs Continue Manually
+                  <div className="space-y-4">
+                    <p className="text-xs text-[var(--muted)] leading-relaxed">
+                      Вы выбрали страну: <strong className="text-[var(--foreground)]">{pendingCountry}</strong>.<br /><br />
+                      На нашей платформе есть готовые, проверенные программы стажировок и обучения для этого направления.
+                      Вы можете автоматически загрузить параметры программы в калькулятор или настроить все расходы вручную.
+                    </p>
 
-                  <div className="flex flex-col gap-2 pt-2">
-                    <button
-                      onClick={() => setShowOffersList(true)}
-                      className="w-full py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-white font-bold text-xs transition"
-                    >
-                      🌟 Загрузить предложение
-                    </button>
-                    <button
-                      onClick={proceedWithoutOffer}
-                      className="w-full py-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--border)]/20 text-[var(--foreground)] font-bold text-xs transition"
-                    >
-                      Ввести вручную
-                    </button>
+                    <div className="flex flex-col gap-2 pt-2">
+                      <button
+                        onClick={() => setShowOffersList(true)}
+                        className="w-full py-2.5 rounded-xl bg-[var(--accent)] hover:opacity-90 text-white font-bold text-xs transition"
+                      >
+                        🌟 Загрузить предложение
+                      </button>
+                      <button
+                        onClick={proceedWithoutOffer}
+                        className="w-full py-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--border)]/20 text-[var(--foreground)] font-bold text-xs transition"
+                      >
+                        Ввести вручную
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                // Offers list for country
-                <div className="space-y-4">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted)]">
-                    Доступные программы в стране {pendingCountry}:
-                  </p>
+                ) : (
+                  // Offers list for country
+                  <div className="space-y-4">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--muted)]">
+                      Доступные программы в стране {pendingCountry}:
+                    </p>
 
-                  <div className="max-h-[260px] overflow-y-auto overscroll-y-contain space-y-2 pr-1 scrollbar-none">
-                    {PROGRAMS_OFFERS[pendingCountry] && PROGRAMS_OFFERS[pendingCountry].length > 0 ? (
-                      PROGRAMS_OFFERS[pendingCountry].map((offer) => (
-                        <div
-                          key={offer.id}
-                          onClick={() => applyOffer(offer)}
-                          className="border border-[var(--border)] bg-[var(--card)] hover:border-[var(--accent)]/40 p-3 rounded-xl cursor-pointer transition flex flex-col justify-between"
-                        >
-                          <div>
-                            <h4 className="text-xs font-bold text-[var(--foreground)] mb-0.5 truncate">
-                              {offer.name}
-                            </h4>
-                            <p className="text-[10px] text-[var(--muted)] mb-2 line-clamp-1">
-                              {offer.description}
-                            </p>
-                          </div>
+                    <div data-lenis-prevent className="max-h-[260px] overflow-y-auto overscroll-y-contain space-y-2 pr-1 scrollbar-none">
+                      {PROGRAMS_OFFERS[pendingCountry] && PROGRAMS_OFFERS[pendingCountry].length > 0 ? (
+                        PROGRAMS_OFFERS[pendingCountry].map((offer) => (
+                          <div
+                            key={offer.id}
+                            onClick={() => applyOffer(offer)}
+                            className="border border-[var(--border)] bg-[var(--card)] hover:border-[var(--accent)]/40 p-3 rounded-xl cursor-pointer transition flex flex-col justify-between"
+                          >
+                            <div>
+                              <h4 className="text-xs font-bold text-[var(--foreground)] mb-0.5 truncate">
+                                {offer.name}
+                              </h4>
+                              <p className="text-[10px] text-[var(--muted)] mb-2 line-clamp-1">
+                                {offer.description}
+                              </p>
+                            </div>
 
-                          <div className="flex justify-between items-center text-[9px] font-bold text-[var(--muted)] pt-1 border-t border-[var(--border)]">
-                            <span className="text-[var(--accent)]">${offer.salary}/мес</span>
-                            <span>{offer.duration} мес</span>
+                            <div className="flex justify-between items-center text-[9px] font-bold text-[var(--muted)] pt-1 border-t border-[var(--border)]">
+                              <span className="text-[var(--accent)]">${offer.salary}/мес</span>
+                              <span>{offer.duration} мес</span>
+                            </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-[var(--muted)] text-[11px]">
+                          Для этой страны пока нет готовых офферов. Но вы можете настроить все параметры вручную!
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-6 text-[var(--muted)] text-[11px]">
-                        Для этой страны пока нет готовых офферов. Но вы можете настроить все параметры вручную!
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  <div className="flex gap-2 pt-3 border-t border-[var(--border)]">
-                    <button
-                      onClick={() => setShowOffersList(false)}
-                      className="flex-1 py-2 rounded-lg border border-[var(--border)] text-[var(--foreground)] text-[11px] font-bold transition"
-                    >
-                      Назад
-                    </button>
-                    <button
-                      onClick={proceedWithoutOffer}
-                      className="flex-1 py-2 rounded-lg bg-[var(--foreground)] text-[var(--background)] text-[11px] font-bold transition"
-                    >
-                      Ввод вручную
-                    </button>
+                    <div className="flex gap-2 pt-3 border-t border-[var(--border)]">
+                      <button
+                        onClick={() => setShowOffersList(false)}
+                        className="flex-1 py-2 rounded-lg border border-[var(--border)] text-[var(--foreground)] text-[11px] font-bold transition"
+                      >
+                        Назад
+                      </button>
+                      <button
+                        onClick={proceedWithoutOffer}
+                        className="flex-1 py-2 rounded-lg bg-[var(--foreground)] text-[var(--background)] text-[11px] font-bold transition"
+                      >
+                        Ввод вручную
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
             </div>
-
-          </div>
           </div>
         </div>
       )}

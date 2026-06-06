@@ -177,7 +177,7 @@ const COURSES: Course[] = [
 
 const itemVariants = {
   hidden: { y: 24, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as any } },
 };
 
 function StarRating({ rating }: { rating: number }) {

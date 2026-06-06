@@ -30,6 +30,7 @@ export default function ArticleDetailPage() {
   const { isAuthenticated } = useAuthStore();
   const openAIConsultant = useAIConsultantStore((s) => s.openWith);
   const navText = translations[lang]?.nav || translations.ru.nav;
+  const t = (translations[lang] as any)?.articleDetail || (translations.ru as any).articleDetail;
 
   const [article, setArticle] = useState<Article | null>(null);
   const [suggested, setSuggested] = useState<Article[]>([]);
@@ -90,15 +91,15 @@ export default function ArticleDetailPage() {
       <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] flex flex-col justify-center items-center px-4">
         <div className="card border-[var(--border)] p-8 rounded-2xl max-w-md w-full text-center space-y-4">
           <BookOpen className="w-12 h-12 mx-auto text-[var(--muted)] opacity-50" />
-          <h2 className="text-xl font-bold">Статья не найдена</h2>
+          <h2 className="text-xl font-bold">{t.notFound}</h2>
           <p className="text-xs text-[var(--muted)]">
-            Возможно, ссылка устарела или статья была временно скрыта администратором.
+            {t.notFoundDesc}
           </p>
           <button
             onClick={() => router.push("/articles")}
             className="w-full py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-emerald-500 transition-colors"
           >
-            Вернуться к статьям
+            {t.backBtn}
           </button>
         </div>
       </div>
@@ -119,7 +120,7 @@ export default function ArticleDetailPage() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--muted)] font-medium">
                 <span className="px-2 py-0.5 rounded-full border border-[var(--accent)]/20 text-[var(--accent)] bg-[var(--accent)]/5">
-                  База знаний
+                  {t.badge}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-[var(--border)]" />
                 <span className="flex items-center gap-1">
@@ -170,7 +171,7 @@ export default function ArticleDetailPage() {
             <div className="card border-[var(--border)] rounded-2xl p-5 space-y-4">
               <h3 className="font-bold text-sm uppercase tracking-wider text-[var(--accent)] flex items-center gap-1.5">
                 <BookOpen size={14} />
-                Читайте также
+                {t.readAlso}
               </h3>
               
               <div className="divide-y divide-[var(--border)]/60">
@@ -198,7 +199,7 @@ export default function ArticleDetailPage() {
                   ))
                 ) : (
                   <p className="text-xs text-[var(--muted)] py-2">
-                    Нет других похожих публикаций.
+                    {t.noSuggested}
                   </p>
                 )}
               </div>
@@ -208,23 +209,23 @@ export default function ArticleDetailPage() {
             <div className="glass border border-[var(--accent)]/15 bg-gradient-to-br from-[var(--card)] to-[var(--accent-dim)] rounded-2xl p-6 text-center space-y-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)] rounded-full blur-[35px] opacity-10 pointer-events-none" />
               <Globe className="w-10 h-10 mx-auto text-[var(--accent)]" />
-              <h4 className="font-bold text-sm">Нужна помощь в переезде?</h4>
+              <h4 className="font-bold text-sm">{t.helpTitle}</h4>
               <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                Наш интеллектуальный ИИ-ассистент поможет подобрать оптимальный маршрут, рассчитать визовые требования и расходы.
+                {t.helpDesc}
               </p>
               {isAuthenticated ? (
                 <button
                   onClick={() => openAIConsultant("chat")}
                   className="block w-full py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-emerald-500 transition-colors shadow-sm cursor-pointer"
                 >
-                  Задать вопрос ИИ
+                  {t.aiBtn}
                 </button>
               ) : (
                 <Link
                   href="/register"
                   className="block w-full py-2 rounded-xl border border-[var(--border)] text-[var(--foreground)] text-xs font-semibold hover:border-[var(--accent)]/40 hover:bg-[var(--accent-dim)] transition-colors shadow-sm"
                 >
-                  Войдите для доступа к AI
+                  {t.loginBtn}
                 </Link>
               )}
             </div>

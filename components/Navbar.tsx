@@ -10,6 +10,7 @@ import { useAIConsultantStore } from "../store/aiConsultantStore";
 import { translations } from "../locales/translations";
 import { Moon, Sun, User, LogOut, Sparkles, Menu, X, Settings, ChevronDown } from "lucide-react";
 import { LogoMark } from "./LogoMark";
+import { useScrollLock } from "../utils/useScrollLock";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -21,6 +22,8 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  useScrollLock(isOpen);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -89,7 +92,7 @@ export default function Navbar() {
           {/* Language */}
           {mounted && (
             <div className="flex items-center rounded-lg border border-[var(--border)] bg-[var(--background-subtle)] p-0.5 gap-0.5">
-              {(["ru", "en", "tg"] as const).map((l) => (
+              {(["ru", "en", "tj"] as const).map((l) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
@@ -180,8 +183,8 @@ export default function Navbar() {
       {/* Mobile menu — full overlay drawer */}
       {isOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-14 left-0 right-0 bg-[var(--card)] border-b border-[var(--border)] shadow-[var(--shadow-lg)] animate-slide-up">
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setIsOpen(false)} style={{ touchAction: "none" }} />
+          <div data-lenis-prevent className="absolute top-14 left-0 right-0 bg-[var(--card)] border-b border-[var(--border)] shadow-[var(--shadow-lg)] animate-slide-up">
             <div className="px-4 py-3 space-y-1">
               {links.map((link) => {
                 const active = isActive(link.href);

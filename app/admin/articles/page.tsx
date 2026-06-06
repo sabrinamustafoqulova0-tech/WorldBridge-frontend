@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import api from "../../../lib/api";
 import { useAuthStore } from "../../../store/authStore";
+import { useScrollLock } from "../../../utils/useScrollLock";
 
 interface Article {
   id: number;
@@ -61,6 +62,8 @@ export default function AdminArticlesPage() {
   // Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+
+  useScrollLock(isDrawerOpen);
   
   // Form fields
   const [title, setTitle] = useState("");
@@ -362,10 +365,11 @@ export default function AdminArticlesPage() {
           <div
             onClick={() => setIsDrawerOpen(false)}
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            style={{ touchAction: "none" }}
           />
 
           {/* Panel — full height, slides from right, панель сама скролится */}
-          <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-[var(--background)] border-l border-[var(--border)] shadow-2xl overflow-y-auto animate-slide-left">
+          <div data-lenis-prevent className="absolute inset-y-0 right-0 w-full max-w-xl bg-[var(--background)] border-l border-[var(--border)] shadow-2xl overflow-y-auto animate-slide-left">
 
             {/* Header — sticky, всегда виден */}
             <div className="sticky top-0 z-10 px-6 py-4 border-b border-[var(--border)] bg-[var(--background)] flex items-center justify-between">

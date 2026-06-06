@@ -8,7 +8,11 @@ import Lenis from "lenis";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    // Clear any inline styles that may have been stuck by previous code versions
+    document.body.style.cssText = "";
+
     const lenis = new Lenis();
+    (window as any).__lenis = lenis;
 
     function raf(time: number) {
       lenis.raf(time);
@@ -19,6 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return () => {
       lenis.destroy();
+      delete (window as any).__lenis;
     };
   }, []);
 

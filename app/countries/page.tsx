@@ -101,7 +101,7 @@ export default function CountriesListPage() {
       opacity: 1,
       transition: {
         duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
+        ease: [0.16, 1, 0.3, 1] as any,
       },
     },
   };
@@ -119,7 +119,7 @@ export default function CountriesListPage() {
           <div className="space-y-2">
             <p className="text-[11px] uppercase tracking-widest font-bold text-[var(--accent)] flex items-center gap-1.5">
               <Compass size={12} className="animate-spin-slow" />
-              Каталог направлений
+              {(text as any).badge || "Destinations"}
             </p>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tighter leading-tight text-balance">
               {text.title1} <span className="text-[var(--accent)]">{text.title2}</span>
@@ -156,10 +156,10 @@ export default function CountriesListPage() {
               <div className="flex items-center gap-4 py-3 border-b border-[var(--border)] text-xs text-[var(--muted)]">
                 <span className="flex items-center gap-1.5">
                   <Globe size={12} className="text-[var(--accent)]" />
-                  {filteredCountries.length} направлений
+                  {filteredCountries.length} {(text as any).count || ""}
                 </span>
                 <span className="text-[var(--border-subtle)]">·</span>
-                <span>Европа · Азия · Америка</span>
+                <span>{(text as any).regions || ""}</span>
               </div>
             )}
             <motion.div 

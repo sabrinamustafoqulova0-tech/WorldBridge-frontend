@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Lang = 'ru' | 'en' | 'tg';
+export type Lang = 'ru' | 'en' | 'tj';
 
 interface LangState {
   lang: Lang;

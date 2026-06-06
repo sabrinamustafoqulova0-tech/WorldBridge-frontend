@@ -5,6 +5,7 @@ import { useAuthStore } from "../store/authStore";
 import { useAIConsultantStore } from "../store/aiConsultantStore";
 import { Sparkles, MessageSquare, X, Send, RotateCcw, Bot, User } from "lucide-react";
 import api from "../lib/api";
+import { useScrollLock } from "../utils/useScrollLock";
 
 interface Message {
   id?: number;
@@ -21,6 +22,8 @@ export default function AIConsultantWidget() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useScrollLock(isOpen);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(() => { if (isOpen) scrollToBottom(); }, [messages, isOpen]);
@@ -105,7 +108,7 @@ export default function AIConsultantWidget() {
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-end md:justify-end p-0 md:p-6"
           onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}>
 
-          <div className="w-full md:w-[420px] h-[85dvh] md:h-[580px] flex flex-col bg-[var(--background)] md:rounded-3xl border-t md:border border-[var(--border)] shadow-2xl overflow-hidden">
+          <div data-lenis-prevent className="w-full md:w-[420px] h-[85dvh] md:h-[580px] flex flex-col bg-[var(--background)] md:rounded-3xl border-t md:border border-[var(--border)] shadow-2xl overflow-hidden">
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] shrink-0">

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { X, LogIn, UserPlus, Globe, Lock } from "lucide-react";
+import { useScrollLock } from "../utils/useScrollLock";
 
 interface AuthGateModalProps {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface AuthGateModalProps {
 }
 
 export default function AuthGateModal({ isOpen, onClose, redirectTo }: AuthGateModalProps) {
+  useScrollLock(isOpen);
+
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
@@ -21,16 +24,6 @@ export default function AuthGateModal({ isOpen, onClose, redirectTo }: AuthGateM
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
-
-  // Lock scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -46,16 +39,17 @@ export default function AuthGateModal({ isOpen, onClose, redirectTo }: AuthGateM
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
+        style={{ touchAction: "none" }}
       />
 
       {/* Modal Panel */}
-      <div className="relative z-10 w-full max-w-sm bg-[var(--background)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div data-lenis-prevent className="relative z-10 w-full max-w-sm max-h-[90dvh] flex flex-col bg-[var(--background)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Ambient glow */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--accent)] rounded-full blur-[60px] opacity-10 pointer-events-none" />
 
         {/* Header */}
-        <div className="relative px-6 pt-6 pb-4 flex items-start justify-between">
+        <div className="shrink-0 relative px-6 pt-6 pb-4 flex items-start justify-between border-b border-[var(--border)]/30">
           <div className="flex items-center gap-3">
             {/* Lock icon badge */}
             <div className="w-10 h-10 rounded-2xl bg-[var(--accent-dim)] border border-[var(--accent)]/20 flex items-center justify-center">
@@ -78,7 +72,7 @@ export default function AuthGateModal({ isOpen, onClose, redirectTo }: AuthGateM
         </div>
 
         {/* Body */}
-        <div className="relative px-6 pb-6 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-6 py-5 space-y-4">
           <p className="text-xs text-[var(--muted)] leading-relaxed">
             Для просмотра подробной информации о программе и подачи заявки необходимо авторизоваться на платформе WorldBridge.
           </p>
@@ -107,7 +101,7 @@ export default function AuthGateModal({ isOpen, onClose, redirectTo }: AuthGateM
           </div>
 
           {/* Footer note */}
-          <div className="flex items-center gap-2 pt-2 border-t border-[var(--border)]">
+          <div className="flex items-center gap-2 pt-3 border-t border-[var(--border)]">
             <Globe size={12} className="text-[var(--muted)] shrink-0" />
             <p className="text-[10px] text-[var(--muted)] leading-snug">
               Более 18,400 человек уже используют WorldBridge для переезда за рубеж.
