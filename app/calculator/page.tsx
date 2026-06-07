@@ -16,6 +16,7 @@ import {
   BookOpen,
   Globe,
   Shield,
+  TrendingUp,
   X,
 } from "lucide-react";
 import api from "../../lib/api";
@@ -100,6 +101,14 @@ function fmt(n: number) {
   return n.toLocaleString("ru-RU", { maximumFractionDigits: 0 });
 }
 
+function parseSalary(salaryRange: string | null): number {
+  if (!salaryRange) return 0;
+  // Collapse spaces inside numbers ("10 000" → "10000"), then grab first integer
+  const cleaned = salaryRange.replace(/(\d)\s+(\d)/g, "$1$2");
+  const match = cleaned.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
+
 export default function CalculatorPage() {
   // ── Form state ──────────────────────────────────────────────────────────
   const [country, setCountry] = useState("de");
@@ -114,6 +123,7 @@ export default function CalculatorPage() {
   const [langMonths, setLangMonths] = useState(0);
   const [langPrice, setLangPrice] = useState(200);
   const [monthsBuffer, setMonthsBuffer] = useState(3);
+  const [monthlyIncome, setMonthlyIncome] = useState(0);
 
   // ── API state ────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -134,7 +144,7 @@ export default function CalculatorPage() {
     fetch("https://api.exchangerate-api.com/v4/latest/EUR")
       .then(r => r.json())
       .then(d => setTjsRate(d.rates?.TJS ?? 10.9))
-      .catch(() => setTjsRate(10.9)); // fallback: ~current EUR→TJS rate
+      .catch(() => setTjsRate(10.9));
   }, []);
 
   const fmtCurrency = (eur: number) => {
@@ -188,6 +198,7 @@ export default function CalculatorPage() {
   const openModal = async (code: string) => {
     setCountry(code);
     setSelectedProgram(null);
+    setMonthlyIncome(0);
     setModalOpen(true);
     setModalLoading(true);
     setModalPrograms([]);
@@ -199,7 +210,7 @@ export default function CalculatorPage() {
       setHealthInsurance(defaults.insurance);
       setVisaFee(defaults.visa);
       setFlightCost(defaults.flight);
-      // Pass values explicitly — avoids stale closure since setState is async
+      // Pass values explicitly to avoid stale closure (setState is async)
       handleCalculate({
         country: code,
         monthly_rent: defaults.rent,
@@ -228,11 +239,13 @@ export default function CalculatorPage() {
     const newVisaFee = defaults?.visa ?? visaFee;
     const newFlightCost = defaults?.flight ?? flightCost;
     const newLangMonths = hasLang ? 3 : langMonths;
+    const income = parseSalary(program.salary_range);
 
     setVisaFee(newVisaFee);
     setFlightCost(newFlightCost);
     setLangMonths(newLangMonths);
     setSelectedProgram(program);
+    setMonthlyIncome(income);
     setModalOpen(false);
     handleCalculate({
       visa_fee: newVisaFee,
@@ -277,7 +290,7 @@ export default function CalculatorPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedProgram(null)}
+                onClick={() => { setSelectedProgram(null); setMonthlyIncome(0); }}
                 className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--border)] transition-all text-sm"
               >×</button>
             </div>
@@ -287,7 +300,6 @@ export default function CalculatorPage() {
           <div className="card rounded-2xl p-5 space-y-4">
             <h2 className="text-sm font-bold tracking-tight">Страна и город</h2>
 
-            {/* Country dropdown */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Страна *</label>
               <div className="relative">
@@ -306,7 +318,6 @@ export default function CalculatorPage() {
               </div>
             </div>
 
-            {/* City */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">Город <span className="normal-case font-normal opacity-60">(необязательно)</span></label>
               <input
@@ -350,6 +361,31 @@ export default function CalculatorPage() {
               >
                 <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${utilitiesIncluded ? "left-5" : "left-0.5"}`} />
               </button>
+            </div>
+          </div>
+
+          {/* Income */}
+          <div className="card rounded-2xl p-5 space-y-4">
+            <h2 className="text-sm font-bold tracking-tight flex items-center gap-2">
+              <TrendingUp size={14} className="text-emerald-500" /> Доход
+            </h2>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                Зарплата / стипендия, € в месяц
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={monthlyIncome}
+                onChange={(e) => setMonthlyIncome(Number(e.target.value))}
+                placeholder={selectedProgram ? String(parseSalary(selectedProgram.salary_range)) : "0"}
+                className={inputCls}
+              />
+              <p className="text-[10px] text-[var(--muted)]">
+                {selectedProgram && parseSalary(selectedProgram.salary_range) > 0
+                  ? `Автозаполнено из программы: ~${parseSalary(selectedProgram.salary_range)} €/мес`
+                  : "Автозаполняется при выборе программы"}
+              </p>
             </div>
           </div>
 
@@ -620,6 +656,55 @@ export default function CalculatorPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Income & balance card */}
+              {monthlyIncome > 0 && (() => {
+                const balance = monthlyIncome - result.monthly_total;
+                const isPositive = balance >= 0;
+                const balanceCls = isPositive
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-500";
+
+                return (
+                  <div className="card rounded-2xl p-5 space-y-4">
+                    <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)]">Доходы и баланс</h3>
+
+                    {/* Income row */}
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center border text-emerald-500 bg-emerald-500/10 border-emerald-500/20 shrink-0">
+                          <TrendingUp size={13} />
+                        </div>
+                        <span className="font-semibold">Зарплата по программе</span>
+                      </div>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{fmtCurrency(monthlyIncome)} / мес</span>
+                    </div>
+
+                    {/* Monthly balance badge */}
+                    <div className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs font-bold ${balanceCls}`}>
+                      <span>Баланс в месяц</span>
+                      <span>{isPositive ? "+" : ""}{fmtCurrency(balance)}</span>
+                    </div>
+
+                    {/* Projections */}
+                    <div className="space-y-2 pt-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Накопления за период</p>
+                      {[3, 6, 12].map(months => {
+                        const total = balance * months;
+                        const pos = total >= 0;
+                        return (
+                          <div key={months} className="flex items-center justify-between text-xs">
+                            <span className="text-[var(--muted)]">За {months} мес.</span>
+                            <span className={`font-semibold ${pos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
+                              {pos ? "+" : ""}{fmtCurrency(total)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* One-time costs */}
               {result.one_time_total > 0 && (
