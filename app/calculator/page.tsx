@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Calculator,
@@ -10,6 +10,7 @@ import {
   Activity,
   Lightbulb,
   ArrowRight,
+  ArrowLeftRight,
   AlertCircle,
   ChevronDown,
   BookOpen,
@@ -39,6 +40,7 @@ interface Program {
   slug: string;
   title: string;
   category: string;
+  country_slug: string;
   duration_months: number | null;
   language_requirement: string | null;
   salary_range: string | null;
@@ -74,6 +76,23 @@ const CATEGORY_LABELS: Record<string, string> = {
   IMMIGRATION: "Иммиграция",
 };
 
+const COUNTRY_DEFAULTS: Record<string, { rent: number; misc: number; insurance: number; visa: number; flight: number }> = {
+  de: { rent: 800,  misc: 350, insurance: 110, visa: 75,  flight: 350 },
+  fr: { rent: 900,  misc: 380, insurance: 100, visa: 99,  flight: 320 },
+  be: { rent: 850,  misc: 320, insurance: 100, visa: 180, flight: 280 },
+  ch: { rent: 1800, misc: 600, insurance: 300, visa: 185, flight: 300 },
+  at: { rent: 800,  misc: 300, insurance: 110, visa: 120, flight: 280 },
+  pl: { rent: 400,  misc: 200, insurance: 50,  visa: 50,  flight: 200 },
+  cz: { rent: 450,  misc: 200, insurance: 50,  visa: 100, flight: 220 },
+  se: { rent: 900,  misc: 400, insurance: 90,  visa: 130, flight: 300 },
+  no: { rent: 1100, misc: 500, insurance: 0,   visa: 520, flight: 350 },
+  fi: { rent: 800,  misc: 350, insurance: 0,   visa: 410, flight: 310 },
+  tr: { rent: 300,  misc: 200, insurance: 50,  visa: 50,  flight: 200 },
+  cn: { rent: 400,  misc: 250, insurance: 50,  visa: 200, flight: 600 },
+  ca: { rent: 1200, misc: 500, insurance: 150, visa: 150, flight: 700 },
+  us: { rent: 1500, misc: 600, insurance: 300, visa: 200, flight: 800 },
+};
+
 const inputCls =
   "w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-[var(--muted)]";
 
@@ -106,6 +125,24 @@ export default function CalculatorPage() {
   const [modalPrograms, setModalPrograms] = useState<Program[]>([]);
   const [modalLoading, setModalLoading] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+
+  // ── Currency state ───────────────────────────────────────────────────────
+  const [tjsRate, setTjsRate] = useState<number | null>(null);
+  const [showTJS, setShowTJS] = useState(false);
+
+  useEffect(() => {
+    fetch("https://api.exchangerate-api.com/v4/latest/EUR")
+      .then(r => r.json())
+      .then(d => setTjsRate(d.rates?.TJS ?? null))
+      .catch(() => {});
+  }, []);
+
+  const fmtCurrency = (eur: number) => {
+    if (showTJS && tjsRate) {
+      return `${(eur * tjsRate).toLocaleString("ru-RU", { maximumFractionDigits: 0 })} смн`;
+    }
+    return `${fmt(eur)} €`;
+  };
 
   const selectedCountry = COUNTRIES.find((c) => c.code === country)!;
 
@@ -149,9 +186,21 @@ export default function CalculatorPage() {
     setModalOpen(true);
     setModalLoading(true);
     setModalPrograms([]);
+
+    const defaults = COUNTRY_DEFAULTS[code];
+    if (defaults) {
+      setMonthlyRent(defaults.rent);
+      setMiscMonthly(defaults.misc);
+      setHealthInsurance(defaults.insurance);
+      setVisaFee(defaults.visa);
+      setFlightCost(defaults.flight);
+    }
+
     try {
-      const { data } = await api.get(`/programs?country_slug=${code}&size=20`);
-      setModalPrograms(data.items ?? []);
+      const { data } = await api.get("/programs", {
+        params: { country_slug: code, size: 20, page: 1 },
+      });
+      setModalPrograms((data.items ?? []).filter((p: Program) => p.country_slug === code));
     } catch {
       setModalPrograms([]);
     } finally {
@@ -470,12 +519,27 @@ export default function CalculatorPage() {
                     <Globe size={10} />
                     {selectedCountry.flag} {selectedCountry.name}{result.city ? `, ${result.city}` : ""}
                   </p>
-                  <h3 className="text-3xl font-extrabold tracking-tight">
-                    {fmt(result.grand_total)} €
-                  </h3>
+                  <div className="flex items-end gap-3">
+                    <h3 className="text-3xl font-extrabold tracking-tight">
+                      {fmtCurrency(result.grand_total)}
+                    </h3>
+                    {tjsRate && (
+                      <button
+                        type="button"
+                        onClick={() => setShowTJS(!showTJS)}
+                        className="mb-0.5 flex items-center gap-1 text-[10px] font-bold bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded-lg transition-all"
+                      >
+                        <ArrowLeftRight size={10} />
+                        {showTJS ? "смн → €" : "€ → смн"}
+                      </button>
+                    )}
+                  </div>
                   <p className="text-[11px] text-white/70 font-semibold">
                     Общие вложения = разовые + курсы + буфер {monthsBuffer} мес.
                   </p>
+                  {tjsRate && (
+                    <p className="text-[10px] text-white/50">1 € = {tjsRate.toFixed(1)} смн</p>
+                  )}
                 </div>
               </div>
 
@@ -491,7 +555,7 @@ export default function CalculatorPage() {
                       </div>
                       <span className="font-semibold">Жильё {!utilitiesIncluded && <span className="text-[var(--muted)] font-normal">(+ ком. услуги)</span>}</span>
                     </div>
-                    <span className="font-bold">{fmt(result.housing_monthly)} €</span>
+                    <span className="font-bold">{fmtCurrency(result.housing_monthly)}</span>
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
@@ -501,7 +565,7 @@ export default function CalculatorPage() {
                       </div>
                       <span className="font-semibold">Питание, транспорт, прочее</span>
                     </div>
-                    <span className="font-bold">{fmt(result.misc_monthly)} €</span>
+                    <span className="font-bold">{fmtCurrency(result.misc_monthly)}</span>
                   </div>
 
                   {result.health_insurance_monthly > 0 && (
@@ -512,7 +576,7 @@ export default function CalculatorPage() {
                         </div>
                         <span className="font-semibold">Страховка</span>
                       </div>
-                      <span className="font-bold">{fmt(result.health_insurance_monthly)} €</span>
+                      <span className="font-bold">{fmtCurrency(result.health_insurance_monthly)}</span>
                     </div>
                   )}
 
@@ -524,13 +588,13 @@ export default function CalculatorPage() {
                         </div>
                         <span className="font-semibold">Языковые курсы</span>
                       </div>
-                      <span className="font-bold">{fmt(result.language_course_monthly)} €</span>
+                      <span className="font-bold">{fmtCurrency(result.language_course_monthly)}</span>
                     </div>
                   )}
 
                   <div className="pt-3 mt-1 border-t border-[var(--border)] flex items-center justify-between">
                     <span className="font-bold text-xs">Итого в месяц</span>
-                    <span className="text-base font-extrabold text-[var(--accent)]">{fmt(result.monthly_total)} €</span>
+                    <span className="text-base font-extrabold text-[var(--accent)]">{fmtCurrency(result.monthly_total)}</span>
                   </div>
                 </div>
               </div>
@@ -547,7 +611,7 @@ export default function CalculatorPage() {
                           <Shield size={13} className="text-amber-500" />
                           <span>Виза + документы</span>
                         </div>
-                        <span>{fmt(result.visa_and_documents)} €</span>
+                        <span>{fmtCurrency(result.visa_and_documents)}</span>
                       </div>
                     )}
                     {result.flight_total > 0 && (
@@ -556,12 +620,12 @@ export default function CalculatorPage() {
                           <Plane size={13} className="text-sky-500" />
                           <span>Перелёт</span>
                         </div>
-                        <span>{fmt(result.flight_total)} €</span>
+                        <span>{fmtCurrency(result.flight_total)}</span>
                       </div>
                     )}
                     <div className="pt-3 border-t border-[var(--border)] flex justify-between items-center">
                       <span className="font-bold">Итого разово</span>
-                      <span className="font-extrabold text-sm">{fmt(result.one_time_total)} €</span>
+                      <span className="font-extrabold text-sm">{fmtCurrency(result.one_time_total)}</span>
                     </div>
                   </div>
                 </div>
@@ -571,12 +635,12 @@ export default function CalculatorPage() {
               <div className="card rounded-2xl p-5 space-y-3 text-xs">
                 <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--muted)]">Финансовая подушка</h3>
                 <div className="flex justify-between font-semibold">
-                  <span className="text-[var(--muted)]">Буфер {monthsBuffer} мес. × {fmt(result.monthly_total)} €</span>
-                  <span>{fmt(result.savings_buffer)} €</span>
+                  <span className="text-[var(--muted)]">Буфер {monthsBuffer} мес. × {fmtCurrency(result.monthly_total)}</span>
+                  <span>{fmtCurrency(result.savings_buffer)}</span>
                 </div>
                 <div className="pt-3 border-t border-[var(--border)] flex justify-between items-center">
                   <span className="font-bold text-xs">Итог (без учёта дохода)</span>
-                  <span className="font-extrabold text-sm text-[var(--accent)]">{fmt(result.grand_total)} €</span>
+                  <span className="font-extrabold text-sm text-[var(--accent)]">{fmtCurrency(result.grand_total)}</span>
                 </div>
               </div>
 
