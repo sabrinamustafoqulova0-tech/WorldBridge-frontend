@@ -133,8 +133,8 @@ export default function CalculatorPage() {
   useEffect(() => {
     fetch("https://api.exchangerate-api.com/v4/latest/EUR")
       .then(r => r.json())
-      .then(d => setTjsRate(d.rates?.TJS ?? null))
-      .catch(() => {});
+      .then(d => setTjsRate(d.rates?.TJS ?? 10.9))
+      .catch(() => setTjsRate(10.9)); // fallback: ~current EUR→TJS rate
   }, []);
 
   const fmtCurrency = (eur: number) => {
@@ -150,8 +150,13 @@ export default function CalculatorPage() {
     visa_fee?: number;
     flight_cost?: number;
     language_course_months?: number;
+    monthly_rent?: number;
+    misc_monthly?: number;
+    health_insurance_monthly?: number;
+    country?: string;
   }) => {
-    if (monthlyRent <= 0) {
+    const _rent = overrides?.monthly_rent ?? monthlyRent;
+    if (_rent <= 0) {
       setError("Укажите стоимость аренды жилья.");
       return;
     }
@@ -159,12 +164,12 @@ export default function CalculatorPage() {
     setError(null);
     try {
       const { data } = await api.post("/calculator/preview", {
-        country,
+        country: overrides?.country ?? country,
         city,
-        monthly_rent: monthlyRent,
+        monthly_rent: _rent,
         utilities_included: utilitiesIncluded,
-        misc_monthly: miscMonthly,
-        health_insurance_monthly: healthInsurance,
+        misc_monthly: overrides?.misc_monthly ?? miscMonthly,
+        health_insurance_monthly: overrides?.health_insurance_monthly ?? healthInsurance,
         visa_fee: overrides?.visa_fee ?? visaFee,
         document_legalisation_cost: docCost,
         flight_cost: overrides?.flight_cost ?? flightCost,
@@ -194,6 +199,15 @@ export default function CalculatorPage() {
       setHealthInsurance(defaults.insurance);
       setVisaFee(defaults.visa);
       setFlightCost(defaults.flight);
+      // Pass values explicitly — avoids stale closure since setState is async
+      handleCalculate({
+        country: code,
+        monthly_rent: defaults.rent,
+        misc_monthly: defaults.misc,
+        health_insurance_monthly: defaults.insurance,
+        visa_fee: defaults.visa,
+        flight_cost: defaults.flight,
+      });
     }
 
     try {
@@ -210,8 +224,9 @@ export default function CalculatorPage() {
 
   const handleProgramSelect = (program: Program) => {
     const hasLang = Boolean(program.language_requirement?.trim());
-    const newVisaFee = 75;
-    const newFlightCost = 300;
+    const defaults = COUNTRY_DEFAULTS[country];
+    const newVisaFee = defaults?.visa ?? visaFee;
+    const newFlightCost = defaults?.flight ?? flightCost;
     const newLangMonths = hasLang ? 3 : langMonths;
 
     setVisaFee(newVisaFee);
@@ -219,7 +234,14 @@ export default function CalculatorPage() {
     setLangMonths(newLangMonths);
     setSelectedProgram(program);
     setModalOpen(false);
-    handleCalculate({ visa_fee: newVisaFee, flight_cost: newFlightCost, language_course_months: newLangMonths });
+    handleCalculate({
+      visa_fee: newVisaFee,
+      flight_cost: newFlightCost,
+      language_course_months: newLangMonths,
+      monthly_rent: monthlyRent,
+      misc_monthly: miscMonthly,
+      health_insurance_monthly: healthInsurance,
+    });
   };
 
   return (
