@@ -51,7 +51,8 @@ export default function Navbar() {
     { href: "/programs",   label: navText.programs    },
     { href: "/countries",  label: navText.destinations },
     { href: "/articles",   label: navText.insights    },
-    { href: "/calculator", label: navText.estimator   },
+    { href: "/calculator",   label: navText.estimator    },
+    { href: "/scholarships", label: navText.scholarships },
   ];
 
   return (
