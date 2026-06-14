@@ -577,6 +577,9 @@ export default function CalculatorPage() {
                     <Globe size={10} />
                     {selectedCountry.flag} {selectedCountry.name}{result.city ? `, ${result.city}` : ""}
                   </p>
+                  <p className="text-[10px] text-white/60 font-semibold">
+                    Нужно иметь до переезда
+                  </p>
                   <div className="flex items-end gap-3">
                     <h3 className="text-3xl font-extrabold tracking-tight">
                       {fmtCurrency(result.grand_total)}
@@ -592,8 +595,8 @@ export default function CalculatorPage() {
                       </button>
                     )}
                   </div>
-                  <p className="text-[11px] text-white/70 font-semibold">
-                    Общие вложения = разовые + курсы + буфер {monthsBuffer} мес.
+                  <p className="text-[11px] text-white/70">
+                    виза + перелёт + курсы + жизнь на {monthsBuffer} мес. вперёд
                   </p>
                   {tjsRate && (
                     <p className="text-[10px] text-white/50">1 € = {tjsRate.toFixed(1)} смн</p>
